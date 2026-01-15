@@ -1,71 +1,132 @@
-import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { CategoryNav } from '../components/CategoryNav';
 import { FeaturedAds } from '../components/FeaturedAds';
-import { AdCard } from '../components/AdCard';
 import { useAds } from '../contexts/AdsContext';
-import { Search } from 'lucide-react';
+import { CATEGORIES } from '../types';
+import { Star, ArrowRight, TrendingUp } from 'lucide-react';
 
 export function Index() {
-    const { getFilteredAds, filter, incrementViews } = useAds();
-    const filteredAds = getFilteredAds();
+    const { getFeaturedAds, getFilteredAds } = useAds();
+    const featuredAds = getFeaturedAds();
+    const allAds = getFilteredAds();
 
-    useEffect(() => {
-        filteredAds.forEach(ad => {
-            const viewedKey = `viewed_${ad.id}`;
-            if (!sessionStorage.getItem(viewedKey)) {
-                incrementViews(ad.id);
-                sessionStorage.setItem(viewedKey, 'true');
-            }
-        });
-    }, [filteredAds]);
+    // Get ad count per category
+    const getCategoryCount = (categoryId: string) => {
+        return allAds.filter(ad => ad.category === categoryId).length;
+    };
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
             <Header />
             <CategoryNav />
-            <FeaturedAds />
 
-            {/* Main content */}
-            <main className="flex-1 container-app py-8">
-                {/* Results header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">
-                            {filter.category === 'all' ? 'All Ads' : `${filter.category}`}
-                            {filter.city !== 'all' && ` in ${filter.city}`}
-                        </h1>
-                        {filter.searchQuery && (
-                            <p className="text-gray-500 text-sm mt-1">
-                                Results for "{filter.searchQuery}"
-                            </p>
-                        )}
+            {/* Hero Section */}
+            <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-16">
+                <div className="container-app text-center">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                        Find What You're Looking For
+                    </h1>
+                    <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
+                        Browse thousands of classified ads across India. Post your ad for free!
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-4">
+                        <Link to="/post-ad" className="btn-lg bg-white text-primary-600 hover:bg-gray-100 rounded-xl font-semibold px-8 py-3">
+                            Post Free Ad
+                        </Link>
+                        <Link to="/category/all" className="btn-lg bg-primary-500 text-white hover:bg-primary-400 rounded-xl font-semibold px-8 py-3 border border-primary-400">
+                            Browse All Ads
+                        </Link>
                     </div>
-                    <span className="text-gray-500 text-sm">
-                        {filteredAds.length} ad{filteredAds.length !== 1 ? 's' : ''}
-                    </span>
                 </div>
+            </section>
 
-                {/* Ads grid */}
-                {filteredAds.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {filteredAds.map(ad => (
-                            <AdCard key={ad.id} ad={ad} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-20">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Search className="text-gray-400" size={24} />
+            {/* Featured Ads Section */}
+            {featuredAds.length > 0 && (
+                <section className="py-12 bg-gradient-to-b from-amber-50 to-white">
+                    <div className="container-app">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2">
+                                <Star className="text-amber-500" size={24} />
+                                <h2 className="text-2xl font-bold text-gray-900">Featured Ads</h2>
+                            </div>
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No ads found</h3>
-                        <p className="text-gray-500">
-                            Try adjusting your filters or search
-                        </p>
+                        <FeaturedAds />
                     </div>
-                )}
-            </main>
+                </section>
+            )}
+
+            {/* Browse by Category Section */}
+            <section className="py-12">
+                <div className="container-app">
+                    <div className="flex items-center gap-2 mb-8">
+                        <TrendingUp className="text-primary-500" size={24} />
+                        <h2 className="text-2xl font-bold text-gray-900">Browse by Category</h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {CATEGORIES.map(category => {
+                            const count = getCategoryCount(category.id);
+                            return (
+                                <Link
+                                    key={category.id}
+                                    to={`/category/${category.id}`}
+                                    className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-primary-200"
+                                >
+                                    <div className="text-4xl mb-3">{category.icon}</div>
+                                    <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+                                        {category.label}
+                                    </h3>
+                                    <div className="flex items-center justify-between mt-2">
+                                        <span className="text-sm text-gray-500">
+                                            {count} ad{count !== 1 ? 's' : ''}
+                                        </span>
+                                        <ArrowRight size={16} className="text-gray-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all" />
+                                    </div>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </div>
+            </section>
+
+            {/* Stats Section */}
+            <section className="py-12 bg-gray-100">
+                <div className="container-app">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                        <div>
+                            <div className="text-3xl font-bold text-primary-600">{allAds.length}+</div>
+                            <div className="text-gray-600">Active Ads</div>
+                        </div>
+                        <div>
+                            <div className="text-3xl font-bold text-primary-600">{CATEGORIES.length}</div>
+                            <div className="text-gray-600">Categories</div>
+                        </div>
+                        <div>
+                            <div className="text-3xl font-bold text-primary-600">500+</div>
+                            <div className="text-gray-600">Cities</div>
+                        </div>
+                        <div>
+                            <div className="text-3xl font-bold text-primary-600">Free</div>
+                            <div className="text-gray-600">To Post</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section className="py-16 bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+                <div className="container-app text-center">
+                    <h2 className="text-3xl font-bold mb-4">Ready to Post Your Ad?</h2>
+                    <p className="text-primary-100 mb-8 max-w-xl mx-auto">
+                        Reach thousands of potential buyers. It's free and takes less than 2 minutes!
+                    </p>
+                    <Link to="/post-ad" className="inline-block bg-white text-primary-600 hover:bg-gray-100 rounded-xl font-semibold px-8 py-3 transition-colors">
+                        Post Your Ad Now
+                    </Link>
+                </div>
+            </section>
 
             <Footer />
         </div>
