@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAds } from '../contexts/AdsContext';
+import { ThemeToggleButton } from './ThemeToggle';
 import { CITIES_BY_STATE, City } from '../types';
 import { Search, User, LogOut, Plus, Menu, X, MapPin, ChevronDown } from 'lucide-react';
 
@@ -126,6 +127,7 @@ export function Header() {
 
                     {/* Desktop actions */}
                     <div className="hidden md:flex items-center gap-3">
+                        <ThemeToggleButton />
                         <Link to="/post-ad" className="btn-primary">
                             <Plus size={18} />
                             Post Ad
@@ -190,6 +192,12 @@ export function Header() {
                                 </optgroup>
                             ))}
                         </select>
+
+                        {/* Theme toggle for mobile */}
+                        <div className="flex items-center justify-between py-2">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Theme</span>
+                            <ThemeToggleButton />
+                        </div>
 
                         <Link to="/post-ad" className="btn-primary w-full" onClick={() => setMobileMenuOpen(false)}>
                             <Plus size={18} /> Post Ad
