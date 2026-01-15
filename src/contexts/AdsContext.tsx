@@ -197,29 +197,36 @@ export function AdsProvider({ children }: { children: ReactNode }) {
         localAds.unshift(newAd);
         saveLocalAds(localAds);
 
-        // Try to save to Supabase (might fail if not authed, that's ok)
+        // Save to Supabase (required for admin to see the ad)
         try {
-            await supabase.from('ads').insert({
+            const { error: insertError } = await supabase.from('ads').insert({
                 id: newAd.id,
                 user_id: newAd.user_id,
                 title: newAd.title,
                 subject: newAd.subject,
                 description: newAd.description,
-                sub_description: newAd.sub_description,
+                sub_description: newAd.sub_description || null,
                 phone_number: newAd.phone_number,
                 category: newAd.category,
                 city: newAd.city,
-                location: newAd.location,
+                location: newAd.location || null,
                 created_at: newAd.created_at,
                 expires_at: newAd.expires_at,
                 is_active: newAd.is_active,
                 views_count: newAd.views_count,
                 calls_count: newAd.calls_count,
-                is_featured: newAd.is_featured,
+                is_featured: newAd.is_featured || false,
                 approval_status: 'pending',
             });
+
+            if (insertError) {
+                console.error('Supabase insert error:', insertError);
+                // Still return success since we saved locally
+            } else {
+                console.log('Ad saved to Supabase successfully');
+            }
         } catch (e) {
-            console.log('Supabase insert skipped (will sync later):', e);
+            console.error('Supabase insert exception:', e);
         }
 
         setAds(prev => [newAd, ...prev]);
