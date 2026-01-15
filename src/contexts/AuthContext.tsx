@@ -59,25 +59,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     setUser(session.user);
                 }
 
-                // Also check Supabase session for admin
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user) {
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', session.user.id)
-                        .single();
+                // Also check Supabase session for admin (ignore errors)
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.user) {
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .eq('id', session.user.id)
+                            .single();
 
-                    if (profile) {
-                        setUser({
-                            id: profile.id,
-                            phone_number: profile.phone_number,
-                            email: profile.email,
-                            display_name: profile.display_name,
-                            created_at: profile.created_at,
-                            updated_at: profile.updated_at,
-                        });
+                        if (profile) {
+                            setUser({
+                                id: profile.id,
+                                phone_number: profile.phone_number,
+                                email: profile.email,
+                                display_name: profile.display_name,
+                                created_at: profile.created_at,
+                                updated_at: profile.updated_at,
+                            });
+                        }
                     }
+                } catch {
+                    // Admin session check failed - that's ok for regular users
                 }
             } catch (error) {
                 console.error('Session error:', error);
