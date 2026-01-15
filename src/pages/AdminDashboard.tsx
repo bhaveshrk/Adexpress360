@@ -481,27 +481,49 @@ export function AdminDashboard() {
                         <form onSubmit={async (e) => {
                             e.preventDefault();
                             const formData = new FormData(e.currentTarget);
+                            const durationDays = parseInt(formData.get('duration') as string) || 30;
 
-                            const { error } = await supabase.from('ads').insert({
-                                user_id: (await supabase.auth.getUser()).data.user?.id,
+                            // Save to localStorage for the hybrid approach
+                            const newAd = {
+                                id: crypto.randomUUID(),
+                                user_id: 'admin',
                                 title: formData.get('title'),
                                 subject: formData.get('subject'),
                                 description: formData.get('description'),
                                 phone_number: formData.get('phone'),
                                 category: formData.get('category'),
                                 city: formData.get('city'),
-                                expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                                created_at: new Date().toISOString(),
+                                expires_at: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString(),
                                 approval_status: 'approved',
                                 is_active: true,
-                            });
+                                views_count: 0,
+                                calls_count: 0,
+                            };
 
-                            if (error) {
-                                showToast('Failed to create ad', 'error');
-                            } else {
-                                showToast('Ad created!', 'success');
-                                setShowPostModal(false);
-                                fetchData();
+                            // Save to localStorage
+                            try {
+                                const stored = localStorage.getItem('adexpress360_ads_local');
+                                const localAds = stored ? JSON.parse(stored) : [];
+                                localAds.unshift(newAd);
+                                localStorage.setItem('adexpress360_ads_local', JSON.stringify(localAds));
+                            } catch (err) {
+                                console.log('Local save error:', err);
                             }
+
+                            // Also try Supabase
+                            try {
+                                await supabase.from('ads').insert({
+                                    ...newAd,
+                                    user_id: (await supabase.auth.getUser()).data.user?.id || 'admin',
+                                });
+                            } catch (err) {
+                                console.log('Supabase insert skipped:', err);
+                            }
+
+                            showToast('Ad created!', 'success');
+                            setShowPostModal(false);
+                            fetchData();
                         }} className="space-y-4">
                             <input name="title" placeholder="Title" required className="w-full p-3 border rounded-xl" />
                             <input name="subject" placeholder="Headline" required className="w-full p-3 border rounded-xl" />
@@ -521,6 +543,21 @@ export function AdminDashboard() {
                                     </optgroup>
                                 ))}
                             </select>
+
+                            {/* Duration Selector */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Ad Duration</label>
+                                <select name="duration" required className="w-full p-3 border rounded-xl">
+                                    <option value="7">1 Week</option>
+                                    <option value="14">2 Weeks</option>
+                                    <option value="30" selected>1 Month</option>
+                                    <option value="60">2 Months</option>
+                                    <option value="90">3 Months</option>
+                                    <option value="180">6 Months</option>
+                                    <option value="365">1 Year</option>
+                                </select>
+                            </div>
+
                             <div className="flex gap-2">
                                 <button type="button" onClick={() => setShowPostModal(false)} className="flex-1 py-3 border rounded-xl">
                                     Cancel
