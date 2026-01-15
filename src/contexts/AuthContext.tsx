@@ -105,10 +105,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signUp = async (phoneNumber: string, password: string, displayName?: string, email?: string): Promise<{ error?: string }> => {
         try {
+            // Normalize phone number - always use last 10 digits
+            const normalizedPhone = phoneNumber.replace(/\D/g, '').slice(-10);
+
             const users = getStoredUsers();
 
             // Check if phone already exists
-            if (users[phoneNumber]) {
+            if (users[normalizedPhone]) {
                 return { error: 'An account with this phone number already exists' };
             }
 
@@ -118,22 +121,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Create user
             const newUser: AppUser = {
                 id: crypto.randomUUID(),
-                phone_number: phoneNumber,
+                phone_number: normalizedPhone,
                 email: email || undefined,
-                display_name: displayName || `User ${phoneNumber.slice(-4)}`,
+                display_name: displayName || `User ${normalizedPhone.slice(-4)}`,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
             };
 
             // Save to local storage
-            users[phoneNumber] = { user: newUser, passwordHash };
+            users[normalizedPhone] = { user: newUser, passwordHash };
             saveUsers(users);
 
             // Also save to Supabase for consistency (ignore errors)
             try {
                 await supabase.from('profiles').upsert({
                     id: newUser.id,
-                    phone_number: phoneNumber,
+                    phone_number: normalizedPhone,
                     email: email || null,
                     display_name: newUser.display_name,
                 });
@@ -154,8 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signIn = async (phoneNumber: string, password: string): Promise<{ error?: string }> => {
         try {
+            // Normalize phone number - always use last 10 digits
+            const normalizedPhone = phoneNumber.replace(/\D/g, '').slice(-10);
+
             const users = getStoredUsers();
-            const storedUser = users[phoneNumber];
+            const storedUser = users[normalizedPhone];
 
             if (!storedUser) {
                 return { error: 'No account found with this phone number' };
