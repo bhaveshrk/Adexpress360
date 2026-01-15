@@ -104,12 +104,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const normalizedPhone = normalizePhone(phoneNumber);
             const passwordHash = await hashPassword(password);
 
+            console.log('Attempting signup for phone:', normalizedPhone);
+
             // Check if phone already exists in Supabase
-            const { data: existingUser } = await supabase
+            const { data: existingUser, error: checkError } = await supabase
                 .from('user_accounts')
                 .select('id')
                 .eq('phone_number', normalizedPhone)
                 .single();
+
+            if (checkError && checkError.code !== 'PGRST116') {
+                console.error('Error checking existing user:', checkError);
+            }
 
             if (existingUser) {
                 return { error: 'An account with this phone number already exists' };
@@ -124,14 +130,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 email: email || null,
             };
 
-            const { error: insertError } = await supabase
+            console.log('Inserting new user:', { ...newUser, password_hash: '***' });
+
+            const { data: insertedData, error: insertError } = await supabase
                 .from('user_accounts')
-                .insert(newUser);
+                .insert(newUser)
+                .select();
 
             if (insertError) {
                 console.error('Supabase insert error:', insertError);
-                return { error: 'Failed to create account. Please try again.' };
+                return { error: `Failed to create account: ${insertError.message}` };
             }
+
+            console.log('User created successfully:', insertedData);
 
             // Create session
             const appUser: AppUser = {
@@ -148,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             return {};
         } catch (error) {
-            console.error('Signup error:', error);
+            console.error('Signup exception:', error);
             return { error: 'An unexpected error occurred' };
         }
     };
