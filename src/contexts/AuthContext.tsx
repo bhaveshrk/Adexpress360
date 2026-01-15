@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 
-// App-level user type
 interface AppUser {
     id: string;
     phone_number: string;
@@ -17,16 +16,21 @@ interface AuthContextType {
     signUp: (phoneNumber: string, password: string, displayName?: string, email?: string) => Promise<{ error?: string }>;
     signIn: (phoneNumber: string, password: string) => Promise<{ error?: string }>;
     signOut: () => Promise<void>;
-    updateProfile: (updates: Partial<AppUser>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Storage keys for local auth (demo mode)
-const USERS_KEY = 'adexpress360_users';
+export function useAuth() {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+}
+
 const SESSION_KEY = 'adexpress360_session';
 
-// Hash password for storage
+// Simple password hashing (in production, use bcrypt on server)
 async function hashPassword(password: string): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(password + 'adexpress360_salt');
@@ -35,17 +39,9 @@ async function hashPassword(password: string): Promise<string> {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function getStoredUsers(): Record<string, { user: AppUser; passwordHash: string }> {
-    try {
-        const stored = localStorage.getItem(USERS_KEY);
-        return stored ? JSON.parse(stored) : {};
-    } catch {
-        return {};
-    }
-}
-
-function saveUsers(users: Record<string, { user: AppUser; passwordHash: string }>): void {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+// Normalize phone number to 10 digits
+function normalizePhone(phone: string): string {
+    return phone.replace(/\D/g, '').slice(-10);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -56,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const checkSession = async () => {
             try {
-                // Check local storage session first
+                // Check local storage session
                 const stored = localStorage.getItem(SESSION_KEY);
                 if (stored) {
                     const session = JSON.parse(stored);
@@ -105,48 +101,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signUp = async (phoneNumber: string, password: string, displayName?: string, email?: string): Promise<{ error?: string }> => {
         try {
-            // Normalize phone number - always use last 10 digits
-            const normalizedPhone = phoneNumber.replace(/\D/g, '').slice(-10);
+            const normalizedPhone = normalizePhone(phoneNumber);
+            const passwordHash = await hashPassword(password);
 
-            const users = getStoredUsers();
+            // Check if phone already exists in Supabase
+            const { data: existingUser } = await supabase
+                .from('user_accounts')
+                .select('id')
+                .eq('phone_number', normalizedPhone)
+                .single();
 
-            // Check if phone already exists
-            if (users[normalizedPhone]) {
+            if (existingUser) {
                 return { error: 'An account with this phone number already exists' };
             }
 
-            // Hash password
-            const passwordHash = await hashPassword(password);
-
-            // Create user
-            const newUser: AppUser = {
+            // Create user in Supabase
+            const newUser = {
                 id: crypto.randomUUID(),
                 phone_number: normalizedPhone,
-                email: email || undefined,
+                password_hash: passwordHash,
                 display_name: displayName || `User ${normalizedPhone.slice(-4)}`,
+                email: email || null,
+            };
+
+            const { error: insertError } = await supabase
+                .from('user_accounts')
+                .insert(newUser);
+
+            if (insertError) {
+                console.error('Supabase insert error:', insertError);
+                return { error: 'Failed to create account. Please try again.' };
+            }
+
+            // Create session
+            const appUser: AppUser = {
+                id: newUser.id,
+                phone_number: newUser.phone_number,
+                display_name: newUser.display_name,
+                email: email || undefined,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
             };
 
-            // Save to local storage
-            users[normalizedPhone] = { user: newUser, passwordHash };
-            saveUsers(users);
-
-            // Also save to Supabase for consistency (ignore errors)
-            try {
-                await supabase.from('profiles').upsert({
-                    id: newUser.id,
-                    phone_number: normalizedPhone,
-                    email: email || null,
-                    display_name: newUser.display_name,
-                });
-            } catch (e) {
-                console.log('Supabase sync skipped:', e);
-            }
-
-            // Set session
-            localStorage.setItem(SESSION_KEY, JSON.stringify({ user: newUser }));
-            setUser(newUser);
+            localStorage.setItem(SESSION_KEY, JSON.stringify({ user: appUser }));
+            setUser(appUser);
 
             return {};
         } catch (error) {
@@ -157,24 +155,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signIn = async (phoneNumber: string, password: string): Promise<{ error?: string }> => {
         try {
-            // Normalize phone number - always use last 10 digits
-            const normalizedPhone = phoneNumber.replace(/\D/g, '').slice(-10);
+            const normalizedPhone = normalizePhone(phoneNumber);
+            const passwordHash = await hashPassword(password);
 
-            const users = getStoredUsers();
-            const storedUser = users[normalizedPhone];
+            // Find user in Supabase
+            const { data: storedUser, error: fetchError } = await supabase
+                .from('user_accounts')
+                .select('*')
+                .eq('phone_number', normalizedPhone)
+                .single();
 
-            if (!storedUser) {
+            if (fetchError || !storedUser) {
                 return { error: 'No account found with this phone number' };
             }
 
-            const passwordHash = await hashPassword(password);
-            if (storedUser.passwordHash !== passwordHash) {
+            if (storedUser.password_hash !== passwordHash) {
                 return { error: 'Invalid password' };
             }
 
-            // Set session
-            localStorage.setItem(SESSION_KEY, JSON.stringify({ user: storedUser.user }));
-            setUser(storedUser.user);
+            // Create session
+            const appUser: AppUser = {
+                id: storedUser.id,
+                phone_number: storedUser.phone_number,
+                display_name: storedUser.display_name,
+                email: storedUser.email || undefined,
+                created_at: storedUser.created_at,
+                updated_at: storedUser.updated_at,
+            };
+
+            localStorage.setItem(SESSION_KEY, JSON.stringify({ user: appUser }));
+            setUser(appUser);
 
             return {};
         } catch (error) {
@@ -184,37 +194,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const signOut = async (): Promise<void> => {
-        await supabase.auth.signOut();
         localStorage.removeItem(SESSION_KEY);
         setUser(null);
-    };
-
-    const updateProfile = async (updates: Partial<AppUser>): Promise<void> => {
-        if (!user) return;
-
-        const users = getStoredUsers();
-        const storedUser = users[user.phone_number];
-        if (storedUser) {
-            const updatedUser = { ...storedUser.user, ...updates, updated_at: new Date().toISOString() };
-            users[user.phone_number] = { ...storedUser, user: updatedUser };
-            saveUsers(users);
-
-            localStorage.setItem(SESSION_KEY, JSON.stringify({ user: updatedUser }));
-            setUser(updatedUser);
-        }
+        await supabase.auth.signOut();
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, updateProfile }}>
+        <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
             {children}
         </AuthContext.Provider>
     );
-}
-
-export function useAuth(): AuthContextType {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
 }
