@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Ad, CATEGORIES } from '../types';
 import { useAds } from '../contexts/AdsContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { maskPhone, shareAd, formatRelativeTime, sanitizeForDisplay } from '../utils/security';
 import { MapPin, Eye, Phone, MessageCircle, Star, Clock, Share2, Bookmark, BookmarkCheck, Flag, X, XCircle } from 'lucide-react';
@@ -37,13 +38,14 @@ const toggleSavedAd = (adId: string): boolean => {
 };
 
 export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProps) {
-    const { incrementCalls } = useAds();
+    const { incrementCalls, incrementViews } = useAds();
+    const { user } = useAuth();
     const { showToast } = useToast();
-    const [showPhone, setShowPhone] = useState(false);
     const [isSaved, setIsSaved] = useState(() => getSavedAds().includes(ad.id));
     const [isSharing, setIsSharing] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const isOwner = user?.id === ad.user_id;
     const category = CATEGORIES.find(c => c.id === ad.category);
     const timeAgo = formatRelativeTime(new Date(ad.created_at));
 
@@ -84,10 +86,12 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
         showToast('Thank you for reporting. We will review this ad.', 'info');
     };
 
-    const openModal = () => setIsModalOpen(true);
+    const openModal = () => {
+        incrementViews(ad.id);
+        setIsModalOpen(true);
+    };
     const closeModal = () => {
         setIsModalOpen(false);
-        setShowPhone(false);
     };
 
     return (
@@ -132,17 +136,27 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                         {displayDescription}
                     </p>
 
-                    {/* Meta */}
-                    <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-400">
-                        <span className="flex items-center gap-1">
-                            <Eye size={14} />
-                            {ad.views_count.toLocaleString()}
-                        </span>
-                        <span className="flex items-center gap-1">
-                            <Clock size={14} />
-                            {timeAgo}
-                        </span>
-                    </div>
+                    {/* Meta - Only for owner */}
+                    {isOwner && (
+                        <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-400">
+                            <span className="flex items-center gap-1">
+                                <Eye size={14} />
+                                {ad.views_count.toLocaleString()}
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <Clock size={14} />
+                                {timeAgo}
+                            </span>
+                        </div>
+                    )}
+                    {!isOwner && (
+                        <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-400">
+                            <span className="flex items-center gap-1">
+                                <Clock size={14} />
+                                {timeAgo}
+                            </span>
+                        </div>
+                    )}
                 </div>
             </article>
 
@@ -210,8 +224,8 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                                 </div>
                             )}
 
-                            {/* Meta info - Hide for rejected ads */}
-                            {ad.approval_status !== 'rejected' && (
+                            {/* Meta info - Hide for rejected ads, Show only to owner */}
+                            {ad.approval_status !== 'rejected' && isOwner && (
                                 <div className="flex items-center gap-4 text-sm text-gray-400 mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
                                     <span className="flex items-center gap-1">
                                         <Eye size={14} />
@@ -224,6 +238,14 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                                     <span className="flex items-center gap-1">
                                         <Clock size={14} />
                                         {timeAgo}
+                                    </span>
+                                </div>
+                            )}
+                            {ad.approval_status !== 'rejected' && !isOwner && (
+                                <div className="flex items-center gap-4 text-sm text-gray-400 mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
+                                    <span className="flex items-center gap-1">
+                                        <Clock size={14} />
+                                        Posted {timeAgo}
                                     </span>
                                 </div>
                             )}
@@ -275,23 +297,13 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                                 <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
                                     <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Contact Seller</p>
                                     <div className="flex flex-col gap-2">
-                                        {!showPhone ? (
-                                            <button
-                                                onClick={() => setShowPhone(true)}
-                                                className="btn-secondary w-full"
-                                            >
-                                                <Phone size={18} />
-                                                Show Number ({maskPhone(ad.phone_number)})
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={handleCall}
-                                                className="btn-primary w-full"
-                                            >
-                                                <Phone size={18} />
-                                                Call: +91 {ad.phone_number}
-                                            </button>
-                                        )}
+                                        <button
+                                            onClick={handleCall}
+                                            className="btn-primary w-full"
+                                        >
+                                            <Phone size={18} />
+                                            Call: +91 {ad.phone_number}
+                                        </button>
 
                                         <button
                                             onClick={handleWhatsApp}
