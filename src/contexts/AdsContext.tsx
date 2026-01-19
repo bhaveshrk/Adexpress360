@@ -289,34 +289,62 @@ export function AdsProvider({ children }: { children: ReactNode }) {
         return { success: true };
     }, [ads]);
 
-    const incrementViews = useCallback((id: string) => {
+    const incrementViews = useCallback(async (id: string) => {
+        // Optimistic UI update
         setAds(prev => prev.map(ad => ad.id === id ? { ...ad, views_count: ad.views_count + 1 } : ad));
 
         // Update local storage
         const localAds = getLocalAds();
-        const ad = localAds.find(a => a.id === id);
-        if (ad) {
-            ad.views_count++;
+        const localAd = localAds.find(a => a.id === id);
+        if (localAd) {
+            localAd.views_count++;
             saveLocalAds(localAds);
         }
 
-        // Try Supabase (fire and forget)
-        void supabase.rpc('increment_view_count', { ad_id: id });
+        // Update Supabase directly with proper error handling
+        try {
+            const { error } = await supabase
+                .from('ads')
+                .update({ views_count: (localAd?.views_count || 1) })
+                .eq('id', id);
+
+            if (error) {
+                console.error('Failed to update views_count in Supabase:', error);
+            } else {
+                console.log('View count updated for ad:', id);
+            }
+        } catch (e) {
+            console.error('Supabase views update exception:', e);
+        }
     }, []);
 
-    const incrementCalls = useCallback((id: string) => {
+    const incrementCalls = useCallback(async (id: string) => {
+        // Optimistic UI update
         setAds(prev => prev.map(ad => ad.id === id ? { ...ad, calls_count: ad.calls_count + 1 } : ad));
 
         // Update local storage
         const localAds = getLocalAds();
-        const ad = localAds.find(a => a.id === id);
-        if (ad) {
-            ad.calls_count++;
+        const localAd = localAds.find(a => a.id === id);
+        if (localAd) {
+            localAd.calls_count++;
             saveLocalAds(localAds);
         }
 
-        // Try Supabase (fire and forget)
-        void supabase.rpc('increment_call_count', { ad_id: id });
+        // Update Supabase directly with proper error handling
+        try {
+            const { error } = await supabase
+                .from('ads')
+                .update({ calls_count: (localAd?.calls_count || 1) })
+                .eq('id', id);
+
+            if (error) {
+                console.error('Failed to update calls_count in Supabase:', error);
+            } else {
+                console.log('Call count updated for ad:', id);
+            }
+        } catch (e) {
+            console.error('Supabase calls update exception:', e);
+        }
     }, []);
 
     const renewAd = useCallback(async (id: string, days: number): Promise<boolean> => {
