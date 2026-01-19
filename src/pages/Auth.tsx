@@ -345,7 +345,7 @@ export function Auth() {
                                             onKeyDown={(e) => handleOtpKeyDown(index, e)}
                                             onPaste={handleOtpPaste}
                                             disabled={loading}
-                                            className="w-12 h-14 text-center text-xl font-bold border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all disabled:opacity-50"
+                                            className="w-12 h-14 text-center text-xl font-bold border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all disabled:opacity-50"
                                         />
                                     ))}
                                 </div>

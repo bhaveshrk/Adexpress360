@@ -153,8 +153,8 @@ export function PostAd() {
                                                 type="button"
                                                 onClick={() => updateFormData({ category: cat.id })}
                                                 className={`p-4 rounded-xl border-2 text-left transition-all ${formData.category === cat.id
-                                                    ? 'border-primary-500 bg-primary-50'
-                                                    : 'border-gray-200 hover:border-gray-300'
+                                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                                                     }`}
                                             >
                                                 <span className="text-2xl">{cat.icon}</span>
