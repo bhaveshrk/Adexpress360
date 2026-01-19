@@ -47,10 +47,10 @@ export function Header() {
                 <div className="flex items-center justify-between h-16 gap-4">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center">
-                            <span className="text-white font-bold text-lg">A</span>
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center">
+                            <span className="text-white font-bold text-sm sm:text-lg">A</span>
                         </div>
-                        <span className="font-bold text-xl text-gray-900 dark:text-white hidden sm:block">
+                        <span className="font-bold text-base sm:text-xl text-gray-900 dark:text-white">
                             adexpress<span className="text-primary-600 dark:text-primary-400">360</span>
                         </span>
                     </Link>
