@@ -1,3 +1,4 @@
+// Build: v2.0.1 - Force Vercel redeploy
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AdsProvider } from './contexts/AdsContext';
