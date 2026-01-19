@@ -216,11 +216,11 @@ export function AdminDashboard() {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'pending':
-                return <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium flex items-center gap-1"><Clock size={12} /> Pending</span>;
+                return <span className="px-2 py-1 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300 rounded-full text-xs font-medium flex items-center gap-1"><Clock size={12} /> Pending</span>;
             case 'approved':
-                return <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1"><CheckCircle size={12} /> Approved</span>;
+                return <span className="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 rounded-full text-xs font-medium flex items-center gap-1"><CheckCircle size={12} /> Approved</span>;
             case 'rejected':
-                return <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium flex items-center gap-1"><XCircle size={12} /> Rejected</span>;
+                return <span className="px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 rounded-full text-xs font-medium flex items-center gap-1"><XCircle size={12} /> Rejected</span>;
             default:
                 return null;
         }
@@ -235,7 +235,7 @@ export function AdminDashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
             {/* Header */}
             <header className="bg-gray-900 text-white py-4">
                 <div className="container mx-auto px-4 flex items-center justify-between">
@@ -258,58 +258,58 @@ export function AdminDashboard() {
             <div className="container mx-auto px-4 py-6">
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                    <div className="bg-white rounded-xl p-4 shadow-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                                <FileText className="text-blue-600" size={20} />
+                            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center">
+                                <FileText className="text-blue-600 dark:text-blue-400" size={20} />
                             </div>
                             <div>
-                                <div className="text-2xl font-bold">{stats.totalAds}</div>
-                                <div className="text-xs text-gray-500">Total Ads</div>
+                                <div className="text-2xl font-bold dark:text-white">{stats.totalAds}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Total Ads</div>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white rounded-xl p-4 shadow-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
-                                <Clock className="text-yellow-600" size={20} />
+                            <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/50 rounded-xl flex items-center justify-center">
+                                <Clock className="text-yellow-600 dark:text-yellow-400" size={20} />
                             </div>
                             <div>
                                 <div className="text-2xl font-bold text-yellow-600">{stats.pendingAds}</div>
-                                <div className="text-xs text-gray-500">Pending</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Pending</div>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white rounded-xl p-4 shadow-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                                <CheckCircle className="text-green-600" size={20} />
+                            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-xl flex items-center justify-center">
+                                <CheckCircle className="text-green-600 dark:text-green-400" size={20} />
                             </div>
                             <div>
                                 <div className="text-2xl font-bold text-green-600">{stats.approvedAds}</div>
-                                <div className="text-xs text-gray-500">Approved</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Approved</div>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white rounded-xl p-4 shadow-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
-                                <XCircle className="text-red-600" size={20} />
+                            <div className="w-10 h-10 bg-red-100 dark:bg-red-900/50 rounded-xl flex items-center justify-center">
+                                <XCircle className="text-red-600 dark:text-red-400" size={20} />
                             </div>
                             <div>
                                 <div className="text-2xl font-bold text-red-600">{stats.rejectedAds}</div>
-                                <div className="text-xs text-gray-500">Rejected</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Rejected</div>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white rounded-xl p-4 shadow-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                                <Users className="text-purple-600" size={20} />
+                            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/50 rounded-xl flex items-center justify-center">
+                                <Users className="text-purple-600 dark:text-purple-400" size={20} />
                             </div>
                             <div>
-                                <div className="text-2xl font-bold">{stats.totalUsers}</div>
-                                <div className="text-xs text-gray-500">Users</div>
+                                <div className="text-2xl font-bold dark:text-white">{stats.totalUsers}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Users</div>
                             </div>
                         </div>
                     </div>
