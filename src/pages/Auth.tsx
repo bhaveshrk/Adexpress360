@@ -185,13 +185,22 @@ export function Auth() {
 
         try {
             // Verify OTP with Firebase
+            console.log('Verifying OTP...');
             await verifyOTP(confirmationResult, enteredOtp);
+            console.log('OTP verified successfully!');
 
             // Phone verified! Now create the app account
-            const { error } = await signUp(phoneNumber, password, displayName, email || undefined);
-            if (error) {
-                setError(error);
+            console.log('Creating account with phone:', phoneNumber);
+            console.log('Display name:', displayName);
+
+            const result = await signUp(phoneNumber, password, displayName, email || undefined);
+            console.log('SignUp result:', result);
+
+            if (result.error) {
+                console.error('SignUp returned error:', result.error);
+                setError(result.error);
             } else {
+                console.log('Account created successfully!');
                 showToast('Phone verified! Account created successfully!', 'success');
                 navigate('/');
             }
