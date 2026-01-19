@@ -111,18 +111,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('Attempting signup for phone:', normalizedPhone);
 
             // Check if phone already exists in Supabase
-            const { data: existingUser, error: checkError } = await supabase
+            const { data: existingUsers, error: checkError } = await supabase
                 .from('user_accounts')
                 .select('id')
-                .eq('phone_number', normalizedPhone)
-                .single();
+                .eq('phone_number', normalizedPhone);
 
-            if (checkError && checkError.code !== 'PGRST116') {
+            if (checkError) {
                 console.error('Error checking existing user:', checkError);
             }
 
-            if (existingUser) {
-                return { error: 'An account with this phone number already exists' };
+            if (existingUsers && existingUsers.length > 0) {
+                console.log('Account found for phone:', normalizedPhone);
+                return { error: 'An account with this phone number already exists. Please Log In.' };
             }
 
             // Create user in Supabase
@@ -143,6 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (insertError) {
                 console.error('Supabase insert error:', insertError);
+                if (insertError.code === '23505') {
+                    return { error: 'An account with this phone number already exists. Please Log In.' };
+                }
                 return { error: `Failed to create account: ${insertError.message}` };
             }
 
