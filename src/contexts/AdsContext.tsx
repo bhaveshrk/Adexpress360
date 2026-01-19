@@ -301,18 +301,16 @@ export function AdsProvider({ children }: { children: ReactNode }) {
             saveLocalAds(localAds);
         }
 
-        // Update Supabase directly with proper error handling
+        // Try Supabase RPC (atomic increment) first, fall back to direct update
         try {
-            const { error } = await supabase
-                .from('ads')
-                .update({ views_count: (localAd?.views_count || 1) })
-                .eq('id', id);
+            const { error: rpcError } = await supabase.rpc('increment_view_count', { ad_id: id });
 
-            if (error) {
-                console.error('Failed to update views_count in Supabase:', error);
-            } else {
-                console.log('View count updated for ad:', id);
+            if (rpcError) {
+                console.log('RPC failed, trying direct update:', rpcError.message);
+                // Fallback to direct update
+                await supabase.from('ads').update({ views_count: (localAd?.views_count || 1) }).eq('id', id);
             }
+            console.log('View count incremented for ad:', id);
         } catch (e) {
             console.error('Supabase views update exception:', e);
         }
@@ -330,18 +328,15 @@ export function AdsProvider({ children }: { children: ReactNode }) {
             saveLocalAds(localAds);
         }
 
-        // Update Supabase directly with proper error handling
+        // Try Supabase RPC (atomic increment) first
         try {
-            const { error } = await supabase
-                .from('ads')
-                .update({ calls_count: (localAd?.calls_count || 1) })
-                .eq('id', id);
+            const { error: rpcError } = await supabase.rpc('increment_call_count', { ad_id: id });
 
-            if (error) {
-                console.error('Failed to update calls_count in Supabase:', error);
-            } else {
-                console.log('Call count updated for ad:', id);
+            if (rpcError) {
+                console.log('RPC failed, trying direct update:', rpcError);
+                await supabase.from('ads').update({ calls_count: (localAd?.calls_count || 1) }).eq('id', id);
             }
+            console.log('Call count incremented for ad:', id);
         } catch (e) {
             console.error('Supabase calls update exception:', e);
         }
