@@ -123,11 +123,11 @@ export function Dashboard() {
 
             <div className="container-app py-8">
                 {/* Stats */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 mb-8">
                     <div className="stat-card">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
-                                <Clock className="text-yellow-600" size={20} />
+                            <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/50 rounded-xl flex items-center justify-center">
+                                <Clock className="text-yellow-600 dark:text-yellow-400" size={20} />
                             </div>
                             <div>
                                 <div className="stat-value text-yellow-600">{pendingAds.length}</div>
@@ -137,8 +137,8 @@ export function Dashboard() {
                     </div>
                     <div className="stat-card">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
-                                <TrendingUp className="text-primary-600" size={20} />
+                            <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/50 rounded-xl flex items-center justify-center">
+                                <TrendingUp className="text-primary-600 dark:text-primary-400" size={20} />
                             </div>
                             <div>
                                 <div className="stat-value">{approvedAds.length}</div>
@@ -148,8 +148,8 @@ export function Dashboard() {
                     </div>
                     <div className="stat-card">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                                <Eye className="text-gray-600" size={20} />
+                            <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                                <Eye className="text-gray-600 dark:text-gray-400" size={20} />
                             </div>
                             <div>
                                 <div className="stat-value">{totalViews.toLocaleString()}</div>
@@ -159,8 +159,8 @@ export function Dashboard() {
                     </div>
                     <div className="stat-card">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-success-100 rounded-xl flex items-center justify-center">
-                                <Phone className="text-success-600" size={20} />
+                            <div className="w-10 h-10 bg-success-100 dark:bg-green-900/50 rounded-xl flex items-center justify-center">
+                                <Phone className="text-success-600 dark:text-green-400" size={20} />
                             </div>
                             <div>
                                 <div className="stat-value">{totalCalls}</div>
@@ -170,8 +170,8 @@ export function Dashboard() {
                     </div>
                     <div className="stat-card">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
-                                <XCircle className="text-red-600" size={20} />
+                            <div className="w-10 h-10 bg-red-100 dark:bg-red-900/50 rounded-xl flex items-center justify-center">
+                                <XCircle className="text-red-600 dark:text-red-400" size={20} />
                             </div>
                             <div>
                                 <div className="stat-value">{rejectedAds.length}</div>
@@ -182,12 +182,12 @@ export function Dashboard() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-2 mb-6 border-b border-gray-200">
+                <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
                     <button
                         onClick={() => setActiveTab('my-ads')}
                         className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${activeTab === 'my-ads'
-                            ? 'border-primary-500 text-primary-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                            ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                     >
                         My Ads ({userAds.length})
@@ -195,8 +195,8 @@ export function Dashboard() {
                     <button
                         onClick={() => setActiveTab('saved')}
                         className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${activeTab === 'saved'
-                            ? 'border-primary-500 text-primary-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                            ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                     >
                         <Bookmark size={14} />
