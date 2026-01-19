@@ -3,7 +3,7 @@ import { Ad, CATEGORIES } from '../types';
 import { useAds } from '../contexts/AdsContext';
 import { useToast } from '../contexts/ToastContext';
 import { maskPhone, shareAd, formatRelativeTime, sanitizeForDisplay } from '../utils/security';
-import { MapPin, Eye, Phone, MessageCircle, Star, Clock, Share2, Bookmark, BookmarkCheck, Flag, X } from 'lucide-react';
+import { MapPin, Eye, Phone, MessageCircle, Star, Clock, Share2, Bookmark, BookmarkCheck, Flag, X, XCircle } from 'lucide-react';
 
 interface AdCardProps {
     ad: Ad;
@@ -224,63 +224,83 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                                 </span>
                             </div>
 
-                            {/* Action buttons */}
-                            <div className="flex flex-wrap gap-2 mb-6">
-                                <button
-                                    onClick={handleSave}
-                                    className={`btn-sm ${isSaved ? 'btn-primary' : 'btn-secondary'}`}
-                                >
-                                    {isSaved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
-                                    {isSaved ? 'Saved' : 'Save'}
-                                </button>
-                                <button
-                                    onClick={handleShare}
-                                    disabled={isSharing}
-                                    className="btn-secondary btn-sm"
-                                >
-                                    <Share2 size={16} />
-                                    Share
-                                </button>
-                                <button
-                                    onClick={handleReport}
-                                    className="btn-secondary btn-sm text-gray-500"
-                                >
-                                    <Flag size={14} />
-                                    Report
-                                </button>
-                            </div>
+                            {/* Rejection Notice */}
+                            {ad.approval_status === 'rejected' && (
+                                <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                                    <h3 className="flex items-center gap-2 text-danger-600 dark:text-red-400 font-semibold mb-2">
+                                        <XCircle size={18} />
+                                        Ad Rejected
+                                    </h3>
+                                    <p className="text-gray-700 dark:text-gray-300 text-sm">
+                                        <strong className="font-medium text-gray-900 dark:text-white">Reason:</strong> {ad.rejection_reason || 'No reason provided.'}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                                        Please edit your ad to address these issues and submit it again for approval.
+                                    </p>
+                                </div>
+                            )}
 
-                            {/* Contact section */}
-                            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
-                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Contact Seller</p>
-                                <div className="flex flex-col gap-2">
-                                    {!showPhone ? (
-                                        <button
-                                            onClick={() => setShowPhone(true)}
-                                            className="btn-secondary w-full"
-                                        >
-                                            <Phone size={18} />
-                                            Show Number ({maskPhone(ad.phone_number)})
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={handleCall}
-                                            className="btn-primary w-full"
-                                        >
-                                            <Phone size={18} />
-                                            Call: +91 {ad.phone_number}
-                                        </button>
-                                    )}
-
+                            {/* Action buttons - Hide for rejected ads */}
+                            {ad.approval_status !== 'rejected' && (
+                                <div className="flex flex-wrap gap-2 mb-6">
                                     <button
-                                        onClick={handleWhatsApp}
-                                        className="btn-whatsapp w-full"
+                                        onClick={handleSave}
+                                        className={`btn-sm ${isSaved ? 'btn-primary' : 'btn-secondary'}`}
                                     >
-                                        <MessageCircle size={18} />
-                                        Chat on WhatsApp
+                                        {isSaved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                                        {isSaved ? 'Saved' : 'Save'}
+                                    </button>
+                                    <button
+                                        onClick={handleShare}
+                                        disabled={isSharing}
+                                        className="btn-secondary btn-sm"
+                                    >
+                                        <Share2 size={16} />
+                                        Share
+                                    </button>
+                                    <button
+                                        onClick={handleReport}
+                                        className="btn-secondary btn-sm text-gray-500"
+                                    >
+                                        <Flag size={14} />
+                                        Report
                                     </button>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Contact section - Hide for rejected ads */}
+                            {ad.approval_status !== 'rejected' && (
+                                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
+                                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Contact Seller</p>
+                                    <div className="flex flex-col gap-2">
+                                        {!showPhone ? (
+                                            <button
+                                                onClick={() => setShowPhone(true)}
+                                                className="btn-secondary w-full"
+                                            >
+                                                <Phone size={18} />
+                                                Show Number ({maskPhone(ad.phone_number)})
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={handleCall}
+                                                className="btn-primary w-full"
+                                            >
+                                                <Phone size={18} />
+                                                Call: +91 {ad.phone_number}
+                                            </button>
+                                        )}
+
+                                        <button
+                                            onClick={handleWhatsApp}
+                                            className="btn-whatsapp w-full"
+                                        >
+                                            <MessageCircle size={18} />
+                                            Chat on WhatsApp
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Dashboard actions */}
                             {showActions && (
