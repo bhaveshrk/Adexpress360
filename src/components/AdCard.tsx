@@ -238,9 +238,7 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                                     <p className="text-gray-700 dark:text-gray-300 text-sm">
                                         <strong className="font-medium text-gray-900 dark:text-white">Reason:</strong> {ad.rejection_reason || 'No reason provided.'}
                                     </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-                                        Please edit your ad to address these issues and submit it again for approval.
-                                    </p>
+
                                 </div>
                             )}
 
