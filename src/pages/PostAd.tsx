@@ -101,26 +101,26 @@ export function PostAd() {
     }, {} as Record<string, string[]>);
 
     if (authLoading) {
-        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
             <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full" />
         </div>;
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 py-6">
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-6">
                 <div className="container-app">
-                    <Link to="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 mb-4 transition-colors">
+                    <Link to="/" className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors">
                         <ArrowLeft size={18} /> Back
                     </Link>
-                    <h1 className="text-2xl font-bold text-gray-900">Post Your Ad</h1>
-                    <p className="text-gray-500 mt-1">Reach millions of customers across India</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Post Your Ad</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">Reach millions of customers across India</p>
                 </div>
             </div>
 
             {/* Steps */}
-            <div className="bg-white border-b border-gray-100 py-4">
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 py-4">
                 <div className="container-app">
                     <div className="flex items-center max-w-xl">
                         {[1, 2, 3].map((num, i) => (
@@ -142,7 +142,7 @@ export function PostAd() {
                         {/* Step 1 */}
                         {step === 1 && (
                             <div className="space-y-6">
-                                <h2 className="text-lg font-semibold text-gray-900">Category & Location</h2>
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Category & Location</h2>
 
                                 <div>
                                     <label className="label">Category</label>
@@ -153,13 +153,13 @@ export function PostAd() {
                                                 type="button"
                                                 onClick={() => updateFormData({ category: cat.id })}
                                                 className={`p-4 rounded-xl border-2 text-left transition-all ${formData.category === cat.id
-                                                        ? 'border-primary-500 bg-primary-50'
-                                                        : 'border-gray-200 hover:border-gray-300'
+                                                    ? 'border-primary-500 bg-primary-50'
+                                                    : 'border-gray-200 hover:border-gray-300'
                                                     }`}
                                             >
                                                 <span className="text-2xl">{cat.icon}</span>
-                                                <span className="block text-sm font-medium text-gray-900 mt-1">{cat.label}</span>
-                                                <span className="block text-xs text-gray-500">{cat.description}</span>
+                                                <span className="block text-sm font-medium text-gray-900 dark:text-white mt-1">{cat.label}</span>
+                                                <span className="block text-xs text-gray-500 dark:text-gray-400">{cat.description}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -184,9 +184,9 @@ export function PostAd() {
 
                                     {/* Dropdown */}
                                     {showCityDropdown && (
-                                        <div className="absolute z-20 mt-2 w-full bg-white rounded-xl shadow-soft border border-gray-200 animate-fade-in">
+                                        <div className="absolute z-20 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 animate-fade-in">
                                             {/* Search input */}
-                                            <div className="p-3 border-b border-gray-100">
+                                            <div className="p-3 border-b border-gray-100 dark:border-gray-700">
                                                 <div className="relative">
                                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                                     <input
@@ -216,8 +216,8 @@ export function PostAd() {
                                                                     type="button"
                                                                     onClick={() => handleCitySelect(city)}
                                                                     className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${formData.city === city
-                                                                            ? 'bg-primary-50 text-primary-700 font-medium'
-                                                                            : 'hover:bg-gray-50'
+                                                                        ? 'bg-primary-50 text-primary-700 font-medium'
+                                                                        : 'hover:bg-gray-50'
                                                                         }`}
                                                                 >
                                                                     {city}
@@ -253,7 +253,7 @@ export function PostAd() {
                         {/* Step 2 */}
                         {step === 2 && (
                             <div className="space-y-6">
-                                <h2 className="text-lg font-semibold text-gray-900">Ad Details</h2>
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Ad Details</h2>
 
                                 <div>
                                     <label className="label">Title *</label>
@@ -322,12 +322,12 @@ export function PostAd() {
                         {/* Step 3 */}
                         {step === 3 && (
                             <div className="space-y-6">
-                                <h2 className="text-lg font-semibold text-gray-900">Review & Publish</h2>
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Review & Publish</h2>
 
-                                <div className="bg-gray-50 rounded-xl p-4">
-                                    <h3 className="font-semibold text-gray-900">{formData.title}</h3>
-                                    <p className="text-primary-600 text-sm">{formData.subject}</p>
-                                    <p className="text-gray-600 text-sm mt-2 line-clamp-3">{formData.description}</p>
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">{formData.title}</h3>
+                                    <p className="text-primary-600 dark:text-primary-400 text-sm">{formData.subject}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-2 line-clamp-3">{formData.description}</p>
                                     <div className="flex flex-wrap gap-2 mt-3">
                                         <span className="badge-primary">{CATEGORIES.find(c => c.id === formData.category)?.icon} {CATEGORIES.find(c => c.id === formData.category)?.label}</span>
                                         <span className="badge-gray">{formData.city}{formData.location && `, ${formData.location}`}</span>
@@ -344,12 +344,12 @@ export function PostAd() {
                                                 type="button"
                                                 onClick={() => updateFormData({ duration_days: opt.days })}
                                                 className={`p-4 rounded-xl border-2 text-left transition-all ${formData.duration_days === opt.days
-                                                        ? 'border-primary-500 bg-primary-50'
-                                                        : 'border-gray-200 hover:border-gray-300'
+                                                    ? 'border-primary-500 bg-primary-50'
+                                                    : 'border-gray-200 hover:border-gray-300'
                                                     }`}
                                             >
-                                                <span className="font-medium text-gray-900">{opt.label}</span>
-                                                <span className={`block text-sm mt-0.5 ${opt.price === 'Free' ? 'text-success-600 font-medium' : 'text-gray-500'}`}>
+                                                <span className="font-medium text-gray-900 dark:text-white">{opt.label}</span>
+                                                <span className={`block text-sm mt-0.5 ${opt.price === 'Free' ? 'text-success-600 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                                                     {opt.price}
                                                 </span>
                                             </button>
@@ -361,11 +361,11 @@ export function PostAd() {
                                     <label className="flex items-start gap-3 cursor-pointer">
                                         <input type="checkbox" checked={formData.is_featured} onChange={(e) => updateFormData({ is_featured: e.target.checked })} className="mt-1 w-5 h-5 accent-amber-500" />
                                         <div>
-                                            <span className="flex items-center gap-2 font-medium text-gray-900">
+                                            <span className="flex items-center gap-2 font-medium text-gray-900 dark:text-white">
                                                 <Star className="text-amber-500 fill-amber-500" size={16} />
                                                 Featured Ad - ₹99
                                             </span>
-                                            <p className="text-sm text-gray-600 mt-1">Appear at the top of search results and get 10x more views</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Appear at the top of search results and get 10x more views</p>
                                         </div>
                                     </label>
                                 </div>

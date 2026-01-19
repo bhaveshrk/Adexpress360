@@ -35,7 +35,7 @@ export function Dashboard() {
     }, [user, authLoading, navigate]);
 
     if (authLoading || !user) {
-        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
             <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full" />
         </div>;
     }
@@ -97,17 +97,17 @@ export function Dashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 py-6">
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-6">
                 <div className="container-app">
-                    <Link to="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 mb-4 transition-colors">
+                    <Link to="/" className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors">
                         <ArrowLeft size={18} /> Back
                     </Link>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                            <p className="text-gray-500 mt-1">Welcome, {user.display_name || user.phone_number}</p>
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                            <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome, {user.display_name || user.phone_number}</p>
                         </div>
                         <div className="flex gap-2">
                             <Link to="/post-ad" className="btn-primary">
