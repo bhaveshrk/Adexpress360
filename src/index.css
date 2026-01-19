@@ -96,15 +96,15 @@
   }
 
   .badge-primary {
-    @apply badge bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300;
+    @apply badge bg-primary-100 text-primary-700 dark:bg-primary-800/50 dark:text-primary-300;
   }
 
   .badge-success {
-    @apply badge bg-success-100 text-success-600 dark:bg-success-900/50 dark:text-success-400;
+    @apply badge bg-success-100 text-success-600 dark:bg-green-800/50 dark:text-green-400;
   }
 
   .badge-warning {
-    @apply badge bg-warning-100 text-warning-600 dark:bg-warning-900/50 dark:text-warning-400;
+    @apply badge bg-warning-100 text-warning-600 dark:bg-amber-800/50 dark:text-amber-400;
   }
 
   .badge-gray {
