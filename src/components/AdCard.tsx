@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Ad, CATEGORIES } from '../types';
 import { useAds } from '../contexts/AdsContext';
 import { useToast } from '../contexts/ToastContext';
-import { maskPhone, shareAd, formatRelativeTime } from '../utils/security';
+import { maskPhone, shareAd, formatRelativeTime, sanitizeForDisplay } from '../utils/security';
 import { MapPin, Eye, Phone, MessageCircle, Star, Clock, Share2, Bookmark, BookmarkCheck, Flag, X } from 'lucide-react';
 
 interface AdCardProps {
@@ -47,6 +47,12 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
     const category = CATEGORIES.find(c => c.id === ad.category);
     const timeAgo = formatRelativeTime(new Date(ad.created_at));
 
+    // Decode HTML entities for display
+    const displayTitle = sanitizeForDisplay(ad.title);
+    const displaySubject = sanitizeForDisplay(ad.subject);
+    const displayDescription = sanitizeForDisplay(ad.description);
+    const displaySubDescription = ad.sub_description ? sanitizeForDisplay(ad.sub_description) : '';
+
     const handleCall = () => {
         incrementCalls(ad.id);
         window.open(`tel:${ad.phone_number}`, '_self');
@@ -54,14 +60,14 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
 
     const handleWhatsApp = () => {
         incrementCalls(ad.id);
-        const message = encodeURIComponent(`Hi, I'm interested in your ad: "${ad.title}" on adexpress360.`);
+        const message = encodeURIComponent(`Hi, I'm interested in your ad: "${displayTitle}" on adexpress360.`);
         window.open(`https://wa.me/91${ad.phone_number}?text=${message}`, '_blank');
     };
 
     const handleShare = async () => {
         setIsSharing(true);
         const url = `${window.location.origin}?ad=${ad.id}`;
-        const success = await shareAd(ad.title, url);
+        const success = await shareAd(displayTitle, url);
         if (success) {
             showToast('Link copied to clipboard!', 'success');
         }
@@ -113,17 +119,17 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
 
                     {/* Title */}
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white leading-snug mb-1 line-clamp-2">
-                        {ad.title}
+                        {displayTitle}
                     </h3>
 
                     {/* Subject */}
                     <p className="text-sm text-primary-600 font-medium mb-2 line-clamp-1">
-                        {ad.subject}
+                        {displaySubject}
                     </p>
 
                     {/* Description - truncated */}
                     <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3">
-                        {ad.description}
+                        {displayDescription}
                     </p>
 
                     {/* Meta */}
@@ -175,12 +181,12 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                         <div className="p-5">
                             {/* Title */}
                             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                                {ad.title}
+                                {displayTitle}
                             </h2>
 
                             {/* Subject */}
                             <p className="text-primary-600 dark:text-primary-400 font-medium mb-4">
-                                {ad.subject}
+                                {displaySubject}
                             </p>
 
                             {/* Location */}
@@ -193,11 +199,11 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                             <div className="mb-6">
                                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</h3>
                                 <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-                                    {ad.description}
+                                    {displayDescription}
                                 </p>
-                                {ad.sub_description && (
+                                {displaySubDescription && (
                                     <p className="text-gray-500 dark:text-gray-400 mt-3 text-sm">
-                                        {ad.sub_description}
+                                        {displaySubDescription}
                                     </p>
                                 )}
                             </div>
