@@ -316,123 +316,177 @@ export function AdminDashboard() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
                         {(['pending', 'approved', 'rejected', 'all'] as const).map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab
+                                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab
                                     ? 'bg-primary-500 text-white'
-                                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                                     }`}
                             >
                                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
                                 {tab === 'pending' && stats.pendingAds > 0 && (
-                                    <span className="ml-2 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">{stats.pendingAds}</span>
+                                    <span className="ml-1 sm:ml-2 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">{stats.pendingAds}</span>
                                 )}
                             </button>
                         ))}
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={fetchData} className="p-2 bg-white rounded-lg hover:bg-gray-50">
+                        <button onClick={fetchData} className="p-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                             <RefreshCw size={18} />
                         </button>
                         <button
                             onClick={() => setShowPostModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+                            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 text-sm"
                         >
-                            <Plus size={18} /> Post Ad
+                            <Plus size={18} /> <span className="hidden sm:inline">Post Ad</span>
                         </button>
                     </div>
                 </div>
 
-                {/* Ads Table */}
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b">
-                            <tr>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Ad</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Category</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Location</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Status</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Stats</th>
-                                <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {filteredAds.length === 0 ? (
+                {/* Ads List - Cards for mobile, Table for desktop */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                    {/* Desktop Table */}
+                    <div className="hidden md:block">
+                        <table className="w-full">
+                            <thead className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
                                 <tr>
-                                    <td colSpan={6} className="py-12 text-center text-gray-500">
-                                        No ads found in this category
-                                    </td>
+                                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Ad</th>
+                                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Category</th>
+                                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Location</th>
+                                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Status</th>
+                                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Stats</th>
+                                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Actions</th>
                                 </tr>
-                            ) : (
-                                filteredAds.map(ad => (
-                                    <tr key={ad.id} className="hover:bg-gray-50">
-                                        <td className="py-4 px-4">
-                                            <div className="max-w-xs">
-                                                <div className="font-medium text-gray-900 truncate">{ad.title}</div>
-                                                <div className="text-sm text-gray-500 truncate">{ad.subject}</div>
-                                                <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                                                    <Phone size={10} /> {ad.phone_number}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            <span className="text-sm">
-                                                {CATEGORIES.find(c => c.id === ad.category)?.icon}{' '}
-                                                {CATEGORIES.find(c => c.id === ad.category)?.label}
-                                            </span>
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            <div className="text-sm flex items-center gap-1">
-                                                <MapPin size={12} className="text-gray-400" />
-                                                {ad.city}
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            {getStatusBadge(ad.approval_status || 'pending')}
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            <div className="text-xs text-gray-500">
-                                                <span className="flex items-center gap-1"><Eye size={12} /> {ad.views_count}</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            <div className="flex items-center justify-end gap-2">
-                                                {ad.approval_status === 'pending' && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => handleApprove(ad)}
-                                                            className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
-                                                            title="Approve"
-                                                        >
-                                                            <CheckCircle size={16} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => { setSelectedAd(ad); setShowRejectModal(true); }}
-                                                            className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
-                                                            title="Reject"
-                                                        >
-                                                            <XCircle size={16} />
-                                                        </button>
-                                                    </>
-                                                )}
-                                                <button
-                                                    onClick={() => handleDelete(ad)}
-                                                    className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                {filteredAds.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="py-12 text-center text-gray-500 dark:text-gray-400">
+                                            No ads found in this category
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    filteredAds.map(ad => (
+                                        <tr key={ad.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <td className="py-4 px-4">
+                                                <div className="max-w-xs">
+                                                    <div className="font-medium text-gray-900 dark:text-white truncate">{ad.title}</div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{ad.subject}</div>
+                                                    <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                                        <Phone size={10} /> {ad.phone_number}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <span className="text-sm dark:text-gray-300">
+                                                    {CATEGORIES.find(c => c.id === ad.category)?.icon}{' '}
+                                                    {CATEGORIES.find(c => c.id === ad.category)?.label}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <div className="text-sm flex items-center gap-1 dark:text-gray-300">
+                                                    <MapPin size={12} className="text-gray-400" />
+                                                    {ad.city}
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                {getStatusBadge(ad.approval_status || 'pending')}
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                    <span className="flex items-center gap-1"><Eye size={12} /> {ad.views_count}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-4 text-right">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {ad.approval_status === 'pending' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleApprove(ad)}
+                                                                className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/50 rounded-lg"
+                                                                title="Approve"
+                                                            >
+                                                                <CheckCircle size={18} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => { setSelectedAd(ad); setShowRejectModal(true); }}
+                                                                className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg"
+                                                                title="Reject"
+                                                            >
+                                                                <XCircle size={18} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleDelete(ad)}
+                                                        className="p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Mobile Cards */}
+                    <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
+                        {filteredAds.length === 0 ? (
+                            <div className="py-12 text-center text-gray-500 dark:text-gray-400">
+                                No ads found in this category
+                            </div>
+                        ) : (
+                            filteredAds.map(ad => (
+                                <div key={ad.id} className="p-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-medium text-gray-900 dark:text-white truncate">{ad.title}</div>
+                                            <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{ad.subject}</div>
+                                        </div>
+                                        {getStatusBadge(ad.approval_status || 'pending')}
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                        <span>{CATEGORIES.find(c => c.id === ad.category)?.icon} {CATEGORIES.find(c => c.id === ad.category)?.label}</span>
+                                        <span className="flex items-center gap-1"><MapPin size={10} /> {ad.city}</span>
+                                        <span className="flex items-center gap-1"><Phone size={10} /> {ad.phone_number}</span>
+                                        <span className="flex items-center gap-1"><Eye size={10} /> {ad.views_count}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-3">
+                                        {ad.approval_status === 'pending' && (
+                                            <>
+                                                <button
+                                                    onClick={() => handleApprove(ad)}
+                                                    className="flex-1 py-2 px-3 bg-green-50 dark:bg-green-900/50 text-green-600 dark:text-green-400 rounded-lg text-sm font-medium"
+                                                >
+                                                    Approve
+                                                </button>
+                                                <button
+                                                    onClick={() => { setSelectedAd(ad); setShowRejectModal(true); }}
+                                                    className="flex-1 py-2 px-3 bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium"
+                                                >
+                                                    Reject
+                                                </button>
+                                            </>
+                                        )}
+                                        <button
+                                            onClick={() => handleDelete(ad)}
+                                            className="p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
             </div>
 
