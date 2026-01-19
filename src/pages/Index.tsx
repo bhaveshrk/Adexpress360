@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
-import { CategoryNav } from '../components/CategoryNav';
 import { FeaturedAds } from '../components/FeaturedAds';
 import { useAds } from '../contexts/AdsContext';
 import { CATEGORIES } from '../types';
@@ -18,9 +17,8 @@ export function Index() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
+        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
             <Header />
-            <CategoryNav />
 
             {/* Hero Section */}
             <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-16">
@@ -42,27 +40,12 @@ export function Index() {
                 </div>
             </section>
 
-            {/* Featured Ads Section */}
-            {featuredAds.length > 0 && (
-                <section className="py-12 bg-gradient-to-b from-amber-50 to-white">
-                    <div className="container-app">
-                        <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-2">
-                                <Star className="text-amber-500" size={24} />
-                                <h2 className="text-2xl font-bold text-gray-900">Featured Ads</h2>
-                            </div>
-                        </div>
-                        <FeaturedAds />
-                    </div>
-                </section>
-            )}
-
-            {/* Browse by Category Section */}
-            <section className="py-12">
+            {/* Browse by Category Section - NOW ABOVE FEATURED */}
+            <section className="py-12 dark:bg-gray-800">
                 <div className="container-app">
                     <div className="flex items-center gap-2 mb-8">
                         <TrendingUp className="text-primary-500" size={24} />
-                        <h2 className="text-2xl font-bold text-gray-900">Browse by Category</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Browse by Category</h2>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -72,14 +55,14 @@ export function Index() {
                                 <Link
                                     key={category.id}
                                     to={`/category/${category.id}`}
-                                    className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-primary-200"
+                                    className="group bg-white dark:bg-gray-700 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-600 hover:border-primary-200"
                                 >
                                     <div className="text-4xl mb-3">{category.icon}</div>
-                                    <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+                                    <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 transition-colors">
                                         {category.label}
                                     </h3>
                                     <div className="flex items-center justify-between mt-2">
-                                        <span className="text-sm text-gray-500">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400">
                                             {count} ad{count !== 1 ? 's' : ''}
                                         </span>
                                         <ArrowRight size={16} className="text-gray-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all" />
@@ -91,25 +74,40 @@ export function Index() {
                 </div>
             </section>
 
+            {/* Featured Ads Section - NOW BELOW CATEGORIES */}
+            {featuredAds.length > 0 && (
+                <section className="py-12 bg-gradient-to-b from-amber-50 to-white dark:from-gray-800 dark:to-gray-900">
+                    <div className="container-app">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2">
+                                <Star className="text-amber-500" size={24} />
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Featured Ads</h2>
+                            </div>
+                        </div>
+                        <FeaturedAds />
+                    </div>
+                </section>
+            )}
+
             {/* Stats Section */}
-            <section className="py-12 bg-gray-100">
+            <section className="py-12 bg-gray-100 dark:bg-gray-800">
                 <div className="container-app">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                         <div>
                             <div className="text-3xl font-bold text-primary-600">{allAds.length}+</div>
-                            <div className="text-gray-600">Active Ads</div>
+                            <div className="text-gray-600 dark:text-gray-400">Active Ads</div>
                         </div>
                         <div>
                             <div className="text-3xl font-bold text-primary-600">{CATEGORIES.length}</div>
-                            <div className="text-gray-600">Categories</div>
+                            <div className="text-gray-600 dark:text-gray-400">Categories</div>
                         </div>
                         <div>
                             <div className="text-3xl font-bold text-primary-600">500+</div>
-                            <div className="text-gray-600">Cities</div>
+                            <div className="text-gray-600 dark:text-gray-400">Cities</div>
                         </div>
                         <div>
                             <div className="text-3xl font-bold text-primary-600">Free</div>
-                            <div className="text-gray-600">To Post</div>
+                            <div className="text-gray-600 dark:text-gray-400">To Post</div>
                         </div>
                     </div>
                 </div>
