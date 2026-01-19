@@ -195,34 +195,38 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                                 <span>{ad.city}{ad.location && `, ${ad.location}`}</span>
                             </div>
 
-                            {/* Description */}
-                            <div className="mb-6">
-                                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</h3>
-                                <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-                                    {displayDescription}
-                                </p>
-                                {displaySubDescription && (
-                                    <p className="text-gray-500 dark:text-gray-400 mt-3 text-sm">
-                                        {displaySubDescription}
+                            {/* Description - Hide for rejected ads */}
+                            {ad.approval_status !== 'rejected' && (
+                                <div className="mb-6">
+                                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</h3>
+                                    <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                                        {displayDescription}
                                     </p>
-                                )}
-                            </div>
+                                    {displaySubDescription && (
+                                        <p className="text-gray-500 dark:text-gray-400 mt-3 text-sm">
+                                            {displaySubDescription}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
-                            {/* Meta info */}
-                            <div className="flex items-center gap-4 text-sm text-gray-400 mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
-                                <span className="flex items-center gap-1">
-                                    <Eye size={14} />
-                                    {ad.views_count.toLocaleString()} views
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <Phone size={14} />
-                                    {ad.calls_count} calls
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <Clock size={14} />
-                                    {timeAgo}
-                                </span>
-                            </div>
+                            {/* Meta info - Hide for rejected ads */}
+                            {ad.approval_status !== 'rejected' && (
+                                <div className="flex items-center gap-4 text-sm text-gray-400 mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
+                                    <span className="flex items-center gap-1">
+                                        <Eye size={14} />
+                                        {ad.views_count.toLocaleString()} views
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <Phone size={14} />
+                                        {ad.calls_count} calls
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <Clock size={14} />
+                                        {timeAgo}
+                                    </span>
+                                </div>
+                            )}
 
                             {/* Rejection Notice */}
                             {ad.approval_status === 'rejected' && (
@@ -302,8 +306,8 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                                 </div>
                             )}
 
-                            {/* Dashboard actions */}
-                            {showActions && (
+                            {/* Dashboard actions - Hide for rejected ads */}
+                            {showActions && ad.approval_status !== 'rejected' && (
                                 <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                                     <button
                                         onClick={() => { closeModal(); onEdit?.(ad); }}
