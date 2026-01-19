@@ -11,6 +11,10 @@
     transition: color-scheme 0.3s ease;
   }
 
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
     @apply bg-gray-50 text-gray-900 font-sans antialiased dark:bg-gray-900 dark:text-gray-100;
     transition: background-color 0.3s ease, color 0.3s ease;

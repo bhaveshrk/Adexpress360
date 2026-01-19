@@ -122,12 +122,12 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                     </p>
 
                     {/* Description - truncated */}
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3">
                         {ad.description}
                     </p>
 
                     {/* Meta */}
-                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                    <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-400">
                         <span className="flex items-center gap-1">
                             <Eye size={14} />
                             {ad.views_count.toLocaleString()}
