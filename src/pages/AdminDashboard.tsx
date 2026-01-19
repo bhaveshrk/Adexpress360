@@ -6,7 +6,7 @@ import { Ad, CATEGORIES, CITIES_BY_STATE } from '../types';
 import {
     Shield, LogOut, Search, CheckCircle, XCircle, Clock, Eye,
     TrendingUp, Users, FileText, Plus, Edit, Trash2, MapPin,
-    Phone, ChevronDown, RefreshCw
+    Phone, ChevronDown, RefreshCw, X
 } from 'lucide-react';
 
 interface AdminStats {
@@ -492,30 +492,30 @@ export function AdminDashboard() {
 
             {/* Reject Modal */}
             {showRejectModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-                        <h3 className="text-lg font-bold mb-4">Reject Ad</h3>
-                        <p className="text-gray-600 text-sm mb-4">
-                            Rejecting: <strong>{selectedAd?.title}</strong>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Reject Ad</h3>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+                            Rejecting: <strong className="text-gray-900 dark:text-white">{selectedAd?.title}</strong>
                         </p>
                         <textarea
                             value={rejectReason}
                             onChange={(e) => setRejectReason(e.target.value)}
                             placeholder="Enter reason for rejection..."
-                            className="w-full p-3 border rounded-xl mb-4 resize-none h-24"
+                            className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl mb-4 resize-none h-24 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
                             required
                         />
                         <div className="flex gap-2">
                             <button
                                 onClick={() => { setShowRejectModal(false); setSelectedAd(null); setRejectReason(''); }}
-                                className="flex-1 py-2 border border-gray-200 rounded-xl hover:bg-gray-50"
+                                className="flex-1 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleReject}
                                 disabled={!rejectReason}
-                                className="flex-1 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 disabled:opacity-50"
+                                className="flex-1 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 Reject Ad
                             </button>
@@ -526,10 +526,18 @@ export function AdminDashboard() {
 
             {/* Post Ad Modal (simplified) */}
             {showPostModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-lg font-bold mb-4">Post Ad (Admin)</h3>
-                        <p className="text-gray-500 text-sm mb-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Post Ad (Admin)</h3>
+                            <button
+                                onClick={() => setShowPostModal(false)}
+                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
                             Post an ad on behalf of a user. You can enter any phone number.
                         </p>
                         <form onSubmit={async (e) => {
@@ -547,6 +555,7 @@ export function AdminDashboard() {
                                 phone_number: String(formData.get('phone') || ''),
                                 category: String(formData.get('category') || ''),
                                 city: String(formData.get('city') || ''),
+                                location: String(formData.get('location') || ''),
                                 created_at: new Date().toISOString(),
                                 expires_at: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString(),
                                 approval_status: 'approved',
@@ -568,32 +577,35 @@ export function AdminDashboard() {
 
                             // Also try Supabase
                             try {
-                                await supabase.from('ads').insert({
+                                const { error: insertError } = await supabase.from('ads').insert({
                                     ...newAd,
                                     user_id: (await supabase.auth.getUser()).data.user?.id || 'admin',
                                 });
+                                if (insertError) throw insertError;
                             } catch (err) {
                                 console.log('Supabase insert skipped:', err);
                             }
 
-                            showToast('Ad created!', 'success');
+                            showToast('Ad created successfully!', 'success');
                             setShowPostModal(false);
                             fetchData();
                         }} className="space-y-4">
-                            <input name="title" placeholder="Title" required className="w-full p-3 border rounded-xl" />
-                            <input name="subject" placeholder="Headline" required className="w-full p-3 border rounded-xl" />
-                            <textarea name="description" placeholder="Description" required className="w-full p-3 border rounded-xl h-24 resize-none" />
-                            <input name="phone" placeholder="Phone Number" required className="w-full p-3 border rounded-xl" />
-                            <select name="category" required className="w-full p-3 border rounded-xl">
+                            <input name="title" placeholder="Title" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
+                            <input name="subject" placeholder="Headline" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
+                            <textarea name="description" placeholder="Description" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500 h-24 resize-none" />
+                            <input name="phone" placeholder="Phone Number" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
+                            <input name="location" placeholder="Locality (e.g. Koramangala)" className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
+
+                            <select name="category" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500">
                                 {CATEGORIES.map(cat => (
-                                    <option key={cat.id} value={cat.id}>{cat.icon} {cat.label}</option>
+                                    <option key={cat.id} value={cat.id}>{cat.label}</option>
                                 ))}
                             </select>
-                            <select name="city" required className="w-full p-3 border rounded-xl">
+                            <select name="city" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500">
                                 {Object.entries(CITIES_BY_STATE).map(([state, cities]) => (
-                                    <optgroup key={state} label={state}>
+                                    <optgroup key={state} label={state} className="bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white">
                                         {cities.map(city => (
-                                            <option key={city} value={city}>{city}</option>
+                                            <option key={city} value={city} className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">{city}</option>
                                         ))}
                                     </optgroup>
                                 ))}
