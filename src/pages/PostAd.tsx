@@ -357,7 +357,7 @@ export function PostAd() {
                                     </div>
                                 </div>
 
-                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
+                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl p-4">
                                     <label className="flex items-start gap-3 cursor-pointer">
                                         <input type="checkbox" checked={formData.is_featured} onChange={(e) => updateFormData({ is_featured: e.target.checked })} className="mt-1 w-5 h-5 accent-amber-500" />
                                         <div>

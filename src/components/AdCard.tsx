@@ -165,7 +165,7 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                             </div>
                             <button
                                 onClick={closeModal}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                             >
                                 <X size={20} />
                             </button>
@@ -184,7 +184,7 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                             </p>
 
                             {/* Location */}
-                            <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
+                            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-4">
                                 <MapPin size={16} />
                                 <span>{ad.city}{ad.location && `, ${ad.location}`}</span>
                             </div>
@@ -196,7 +196,7 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                                     {ad.description}
                                 </p>
                                 {ad.sub_description && (
-                                    <p className="text-gray-500 mt-3 text-sm">
+                                    <p className="text-gray-500 dark:text-gray-400 mt-3 text-sm">
                                         {ad.sub_description}
                                     </p>
                                 )}
