@@ -87,7 +87,10 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
     };
 
     const openModal = () => {
-        incrementViews(ad.id);
+        // Only count views for non-owners (guests and other logged-in users)
+        if (!isOwner) {
+            incrementViews(ad.id);
+        }
         setIsModalOpen(true);
     };
     const closeModal = () => {
