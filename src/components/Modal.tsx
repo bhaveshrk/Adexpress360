@@ -17,11 +17,11 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
                 className="modal-content"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between p-5 border-b border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+                <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
                     <button
                         onClick={onClose}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -64,10 +64,10 @@ export function ConfirmDialog({
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-2">{title}</h2>
-                    <p className="text-gray-600">{message}</p>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{title}</h2>
+                    <p className="text-gray-600 dark:text-gray-300">{message}</p>
                 </div>
-                <div className="flex gap-3 p-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
+                <div className="flex gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700 rounded-b-2xl">
                     <button onClick={onClose} className="btn-secondary flex-1">
                         {cancelText}
                     </button>
