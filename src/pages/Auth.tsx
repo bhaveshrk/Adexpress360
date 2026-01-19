@@ -26,7 +26,7 @@ export function Auth() {
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
     const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
-    const { signIn, signUp, user } = useAuth();
+    const { signIn, signUp, user, checkUserExists } = useAuth();
     const { showToast } = useToast();
     const navigate = useNavigate();
 
@@ -103,6 +103,14 @@ export function Auth() {
         setError('');
 
         try {
+            // Check if user already exists
+            const exists = await checkUserExists(phoneNumber);
+            if (exists) {
+                setError('An account with this phone number already exists. Please Log In.');
+                setLoading(false);
+                return;
+            }
+
             // Setup reCAPTCHA
             setupRecaptcha('recaptcha-container');
 

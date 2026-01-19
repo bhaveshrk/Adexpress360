@@ -16,6 +16,7 @@ interface AuthContextType {
     signUp: (phoneNumber: string, password: string, displayName?: string, email?: string) => Promise<{ error?: string }>;
     signIn: (phoneNumber: string, password: string) => Promise<{ error?: string }>;
     signOut: () => Promise<void>;
+    checkUserExists: (phoneNumber: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -171,6 +172,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const checkUserExists = async (phoneNumber: string): Promise<boolean> => {
+        try {
+            const normalizedPhone = normalizePhone(phoneNumber);
+            const { data, error } = await supabase
+                .from('user_accounts')
+                .select('id')
+                .eq('phone_number', normalizedPhone);
+
+            if (error) {
+                console.error('Error checking user existence:', error);
+                return false;
+            }
+
+            return data && data.length > 0;
+        } catch (error) {
+            console.error('Check user exists error:', error);
+            return false;
+        }
+    };
+
     const signIn = async (phoneNumber: string, password: string): Promise<{ error?: string }> => {
         try {
             const normalizedPhone = normalizePhone(phoneNumber);
@@ -218,7 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+        <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, checkUserExists }}>
             {children}
         </AuthContext.Provider>
     );
