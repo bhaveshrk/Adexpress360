@@ -266,7 +266,7 @@ export function Auth() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
             {/* reCAPTCHA container - invisible */}
             <div id="recaptcha-container" ref={recaptchaContainerRef}></div>
 
@@ -274,12 +274,12 @@ export function Auth() {
                 {step === 'otp' ? (
                     <button
                         onClick={resetToCredentials}
-                        className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors"
+                        className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                         <ArrowLeft size={18} /> Back
                     </button>
                 ) : (
-                    <Link to="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors">
+                    <Link to="/" className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                         <ArrowLeft size={18} /> Back
                     </Link>
                 )}
@@ -297,17 +297,17 @@ export function Auth() {
 
                         {step === 'otp' ? (
                             <>
-                                <h1 className="text-2xl font-bold text-gray-900">Verify Phone</h1>
-                                <p className="text-gray-500 mt-1">
+                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Verify Phone</h1>
+                                <p className="text-gray-500 dark:text-gray-400 mt-1">
                                     Enter the 6-digit code sent to +91 {phoneNumber}
                                 </p>
                             </>
                         ) : (
                             <>
-                                <h1 className="text-2xl font-bold text-gray-900">
+                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {isSignUp ? 'Create Account' : 'Welcome Back'}
                                 </h1>
-                                <p className="text-gray-500 mt-1">
+                                <p className="text-gray-500 dark:text-gray-400 mt-1">
                                     {isSignUp ? 'Sign up to start posting ads' : 'Sign in to your account'}
                                 </p>
                             </>

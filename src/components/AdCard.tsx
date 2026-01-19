@@ -112,7 +112,7 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-lg font-semibold text-gray-900 leading-snug mb-1 line-clamp-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white leading-snug mb-1 line-clamp-2">
                         {ad.title}
                     </h3>
 
@@ -122,7 +122,7 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                     </p>
 
                     {/* Description - truncated */}
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
                         {ad.description}
                     </p>
 
@@ -147,11 +147,11 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                     onClick={closeModal}
                 >
                     <div
-                        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in"
+                        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal Header */}
-                        <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
+                        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-5 py-4 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <span className="badge-primary">
                                     {category?.icon} {category?.label}
@@ -174,12 +174,12 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                         {/* Modal Content */}
                         <div className="p-5">
                             {/* Title */}
-                            <h2 className="text-xl font-bold text-gray-900 mb-2">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                                 {ad.title}
                             </h2>
 
                             {/* Subject */}
-                            <p className="text-primary-600 font-medium mb-4">
+                            <p className="text-primary-600 dark:text-primary-400 font-medium mb-4">
                                 {ad.subject}
                             </p>
 
@@ -191,8 +191,8 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
 
                             {/* Description */}
                             <div className="mb-6">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-2">Description</h3>
-                                <p className="text-gray-600 whitespace-pre-wrap">
+                                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</h3>
+                                <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
                                     {ad.description}
                                 </p>
                                 {ad.sub_description && (
@@ -203,7 +203,7 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                             </div>
 
                             {/* Meta info */}
-                            <div className="flex items-center gap-4 text-sm text-gray-400 mb-6 pb-4 border-b border-gray-100">
+                            <div className="flex items-center gap-4 text-sm text-gray-400 mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
                                 <span className="flex items-center gap-1">
                                     <Eye size={14} />
                                     {ad.views_count.toLocaleString()} views
@@ -245,8 +245,8 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                             </div>
 
                             {/* Contact section */}
-                            <div className="bg-gray-50 rounded-xl p-4">
-                                <p className="text-sm font-semibold text-gray-700 mb-3">Contact Seller</p>
+                            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
+                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Contact Seller</p>
                                 <div className="flex flex-col gap-2">
                                     {!showPhone ? (
                                         <button
@@ -278,7 +278,7 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
 
                             {/* Dashboard actions */}
                             {showActions && (
-                                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                                     <button
                                         onClick={() => { closeModal(); onEdit?.(ad); }}
                                         className="btn-secondary flex-1"

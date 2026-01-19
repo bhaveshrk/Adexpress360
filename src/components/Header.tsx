@@ -42,7 +42,7 @@ export function Header() {
     }, {} as Record<string, string[]>);
 
     return (
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
             <div className="container-app">
                 <div className="flex items-center justify-between h-16 gap-4">
                     {/* Logo */}
@@ -50,8 +50,8 @@ export function Header() {
                         <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center">
                             <span className="text-white font-bold text-lg">A</span>
                         </div>
-                        <span className="font-bold text-xl text-gray-900 hidden sm:block">
-                            adexpress<span className="text-primary-600">360</span>
+                        <span className="font-bold text-xl text-gray-900 dark:text-white hidden sm:block">
+                            adexpress<span className="text-primary-600 dark:text-primary-400">360</span>
                         </span>
                     </Link>
 
@@ -73,7 +73,7 @@ export function Header() {
                     <div className="hidden lg:block relative">
                         <button
                             onClick={() => setShowCityDropdown(!showCityDropdown)}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
                         >
                             <MapPin size={16} className="text-gray-400" />
                             <span>{filter.city === 'all' ? 'All India' : filter.city}</span>
@@ -83,8 +83,8 @@ export function Header() {
                         {showCityDropdown && (
                             <>
                                 <div className="fixed inset-0 z-10" onClick={() => setShowCityDropdown(false)} />
-                                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-soft border border-gray-100 z-20 animate-fade-in">
-                                    <div className="p-3 border-b border-gray-100">
+                                <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-100 dark:border-gray-700 z-20 animate-fade-in">
+                                    <div className="p-3 border-b border-gray-100 dark:border-gray-700">
                                         <input
                                             type="text"
                                             value={citySearch}
@@ -175,7 +175,7 @@ export function Header() {
 
             {/* Mobile menu */}
             {mobileMenuOpen && (
-                <div className="md:hidden border-t border-gray-100 bg-white animate-fade-in">
+                <div className="md:hidden border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 animate-fade-in">
                     <div className="container-app py-4 space-y-3">
                         {/* City selector */}
                         <select
