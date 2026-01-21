@@ -427,7 +427,11 @@ export function Dashboard() {
                             </button>
                         </div>
                         <div className="p-6">
-                            <AnalyticsChart adId={analyticsModal.id} />
+                            <AnalyticsChart
+                                adId={analyticsModal.id}
+                                totalViews={analyticsModal.views_count}
+                                totalCalls={analyticsModal.calls_count}
+                            />
                         </div>
                     </div>
                 </div>
