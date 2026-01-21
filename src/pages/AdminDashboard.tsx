@@ -121,7 +121,22 @@ export function AdminDashboard() {
     };
 
     const handleApprove = async (ad: Ad) => {
-        const approvedAd = { ...ad, approval_status: 'approved' as const, approved_at: new Date().toISOString() };
+        const now = new Date();
+
+        // Calculate original duration (from created_at to expires_at)
+        const createdAt = new Date(ad.created_at);
+        const originalExpiry = new Date(ad.expires_at);
+        const durationMs = originalExpiry.getTime() - createdAt.getTime();
+
+        // Set new expiry from NOW + original duration
+        const newExpiry = new Date(now.getTime() + durationMs).toISOString();
+
+        const approvedAd = {
+            ...ad,
+            approval_status: 'approved' as const,
+            approved_at: now.toISOString(),
+            expires_at: newExpiry  // Duration starts from approval
+        };
 
         // Optimistic update - update local state immediately
         setAds(prev => prev.map(a => a.id === ad.id ? approvedAd : a));
@@ -152,7 +167,8 @@ export function AdminDashboard() {
         try {
             await supabase.from('ads').update({
                 approval_status: 'approved',
-                approved_at: new Date().toISOString()
+                approved_at: now.toISOString(),
+                expires_at: newExpiry
             }).eq('id', ad.id);
         } catch (e) {
             console.log('Supabase update skipped:', e);
