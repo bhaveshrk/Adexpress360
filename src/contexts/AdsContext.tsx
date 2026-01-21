@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { Ad, AdCategory, AdsFilter, AdFormData } from '../types';
 import { supabase } from '../lib/supabase';
+import { incrementAdStats } from '../lib/analytics';
 import { sanitizeInput, validateAdContent } from '../utils/security';
 
 interface AdsContextType {
@@ -302,11 +303,8 @@ export function AdsProvider({ children }: { children: ReactNode }) {
             saveLocalAds(localAds);
         }
 
-        // RPC first, direct update fallback
-        const { error } = await supabase.rpc('increment_view_count', { ad_id: id });
-        if (error) {
-            await supabase.from('ads').update({ views_count: localAd?.views_count ?? 1 }).eq('id', id);
-        }
+        // Call new Analytics API
+        await incrementAdStats(id, 'view');
     }, []);
 
     const incrementCalls = useCallback(async (id: string) => {
@@ -321,11 +319,8 @@ export function AdsProvider({ children }: { children: ReactNode }) {
             saveLocalAds(localAds);
         }
 
-        // RPC first, direct update fallback
-        const { error } = await supabase.rpc('increment_call_count', { ad_id: id });
-        if (error) {
-            await supabase.from('ads').update({ calls_count: localAd?.calls_count ?? 1 }).eq('id', id);
-        }
+        // Call new Analytics API
+        await incrementAdStats(id, 'call');
     }, []);
 
     const renewAd = useCallback(async (id: string, days: number): Promise<boolean> => {

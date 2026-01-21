@@ -8,7 +8,8 @@ import { ConfirmDialog } from '../components/Modal';
 import { ExtendDurationModal } from '../components/ExtendDurationModal';
 import { Ad } from '../types';
 import { formatTimeRemaining } from '../utils/security';
-import { ArrowLeft, Plus, Eye, Phone, TrendingUp, Clock, Bookmark, RefreshCw, Settings, AlertCircle, CheckCircle, XCircle, CheckSquare, Timer } from 'lucide-react';
+import { AnalyticsChart } from '../components/AnalyticsChart';
+import { ArrowLeft, Plus, Eye, Phone, TrendingUp, Clock, Bookmark, RefreshCw, Settings, AlertCircle, CheckCircle, XCircle, CheckSquare, Timer, BarChart2, X } from 'lucide-react';
 
 // Get saved ads from localStorage
 const SAVED_ADS_KEY = 'adexpress360_saved_ads';
@@ -30,6 +31,7 @@ export function Dashboard() {
     const [deleteConfirm, setDeleteConfirm] = useState<Ad | null>(null);
     const [renewConfirm, setRenewConfirm] = useState<Ad | null>(null);
     const [extendModal, setExtendModal] = useState<{ ad: Ad; mode: 'extend' | 'renew' } | null>(null);
+    const [analyticsModal, setAnalyticsModal] = useState<Ad | null>(null);
     const [activeTab, setActiveTab] = useState<'my-ads' | 'saved'>('my-ads');
 
     React.useEffect(() => {
@@ -267,12 +269,20 @@ export function Dashboard() {
                                                                 {formatTimeRemaining(new Date(ad.expires_at))}
                                                             </span>
                                                         </div>
-                                                        <button
-                                                            onClick={() => handleExtend(ad)}
-                                                            className="w-full py-2 text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors flex items-center justify-center gap-1"
-                                                        >
-                                                            <Clock size={12} /> Extend Duration
-                                                        </button>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => setAnalyticsModal(ad)}
+                                                                className="flex-1 py-2 text-xs font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center gap-1"
+                                                            >
+                                                                <BarChart2 size={12} /> Analytics
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleExtend(ad)}
+                                                                className="flex-1 py-2 text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors flex items-center justify-center gap-1"
+                                                            >
+                                                                <Clock size={12} /> Extend
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}
@@ -393,6 +403,35 @@ export function Dashboard() {
                 currentExpiry={extendModal ? new Date(extendModal.ad.expires_at) : new Date()}
                 mode={extendModal?.mode || 'extend'}
             />
+
+            {/* Analytics Modal */}
+            {analyticsModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
+                    onClick={() => setAnalyticsModal(null)}
+                >
+                    <div
+                        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <BarChart2 className="text-primary-500" />
+                                Analytics: {analyticsModal.title}
+                            </h2>
+                            <button
+                                onClick={() => setAnalyticsModal(null)}
+                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <AnalyticsChart adId={analyticsModal.id} />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
