@@ -83,12 +83,21 @@ export function AdminDashboard() {
                 console.log('Local storage error:', e);
             }
 
-            // Merge: prefer Supabase, add local ads not in Supabase
+            // Merge: for ads in BOTH sources, prefer localStorage (reflects admin actions)
+            // For ads only in one source, include them
+            const localAdMap = new Map(localAds.map(a => [a.id, a]));
+            const mergedAds = supabaseAds.map(supaAd => {
+                const localAd = localAdMap.get(supaAd.id);
+                // If local version exists, use it (has admin's approval updates)
+                return localAd || supaAd;
+            });
+            // Add any local-only ads (not in Supabase)
             const supabaseIds = new Set(supabaseAds.map(a => a.id));
-            const mergedAds = [
-                ...supabaseAds,
-                ...localAds.filter(a => !supabaseIds.has(a.id))
-            ];
+            localAds.forEach(localAd => {
+                if (!supabaseIds.has(localAd.id)) {
+                    mergedAds.push(localAd);
+                }
+            });
 
             setAds(mergedAds);
             setStats({
@@ -112,6 +121,11 @@ export function AdminDashboard() {
     };
 
     const handleApprove = async (ad: Ad) => {
+        // Optimistic update - update local state immediately
+        setAds(prev => prev.map(a =>
+            a.id === ad.id ? { ...a, approval_status: 'approved', approved_at: new Date().toISOString() } : a
+        ));
+
         // Update in localStorage
         try {
             const stored = localStorage.getItem('adexpress360_ads_local');
@@ -137,6 +151,7 @@ export function AdminDashboard() {
         }
 
         showToast('Ad approved!', 'success');
+        // Refresh to sync stats
         fetchData();
     };
 
