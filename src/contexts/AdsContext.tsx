@@ -19,6 +19,7 @@ interface AdsContextType {
     incrementViews: (id: string) => void;
     incrementCalls: (id: string) => void;
     renewAd: (id: string, days: number) => Promise<boolean>;
+    extendAd: (id: string, days: number) => Promise<boolean>;
     refreshAds: () => Promise<void>;
 }
 
@@ -328,6 +329,7 @@ export function AdsProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const renewAd = useCallback(async (id: string, days: number): Promise<boolean> => {
+        // For expired ads: set new expiry from NOW
         const newExpiry = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
         // Update local storage
@@ -350,10 +352,41 @@ export function AdsProvider({ children }: { children: ReactNode }) {
         return true;
     }, []);
 
+    const extendAd = useCallback(async (id: string, days: number): Promise<boolean> => {
+        // For active ads: ADD days to current expiry
+        const currentAd = ads.find(a => a.id === id);
+        if (!currentAd) return false;
+
+        const currentExpiry = new Date(currentAd.expires_at);
+        const now = new Date();
+        // If already expired, start from now; otherwise add to current expiry
+        const baseDate = currentExpiry > now ? currentExpiry : now;
+        const newExpiry = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
+
+        // Update local storage
+        const localAds = getLocalAds();
+        const ad = localAds.find(a => a.id === id);
+        if (ad) {
+            ad.expires_at = newExpiry;
+            ad.is_active = true;
+            saveLocalAds(localAds);
+        }
+
+        // Try Supabase
+        try {
+            await supabase.from('ads').update({ expires_at: newExpiry, is_active: true }).eq('id', id);
+        } catch (e) {
+            console.log('Supabase extend skipped:', e);
+        }
+
+        setAds(prev => prev.map(ad => ad.id === id ? { ...ad, expires_at: newExpiry, is_active: true } : ad));
+        return true;
+    }, [ads]);
+
     return (
         <AdsContext.Provider value={{
             ads, loading, filter, setFilter, getFilteredAds, getFeaturedAds, getUserAds,
-            getAdById, getCategoryCount, addAd, updateAd, deleteAd, incrementViews, incrementCalls, renewAd, refreshAds,
+            getAdById, getCategoryCount, addAd, updateAd, deleteAd, incrementViews, incrementCalls, renewAd, extendAd, refreshAds,
         }}>
             {children}
         </AdsContext.Provider>

@@ -5,9 +5,10 @@ import { useAds } from '../contexts/AdsContext';
 import { useToast } from '../contexts/ToastContext';
 import { AdCard } from '../components/AdCard';
 import { ConfirmDialog } from '../components/Modal';
+import { ExtendDurationModal } from '../components/ExtendDurationModal';
 import { Ad } from '../types';
-import { formatRelativeTime } from '../utils/security';
-import { ArrowLeft, Plus, Eye, Phone, TrendingUp, Clock, Bookmark, RefreshCw, Settings, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { formatTimeRemaining } from '../utils/security';
+import { ArrowLeft, Plus, Eye, Phone, TrendingUp, Clock, Bookmark, RefreshCw, Settings, AlertCircle, CheckCircle, XCircle, CheckSquare, Timer } from 'lucide-react';
 
 // Get saved ads from localStorage
 const SAVED_ADS_KEY = 'adexpress360_saved_ads';
@@ -22,12 +23,13 @@ const getSavedAds = (): string[] => {
 
 export function Dashboard() {
     const { user, loading: authLoading, signOut } = useAuth();
-    const { getUserAds, deleteAd, renewAd, getAdById } = useAds();
+    const { getUserAds, deleteAd, renewAd, extendAd, getAdById } = useAds();
     const { showToast } = useToast();
     const navigate = useNavigate();
 
     const [deleteConfirm, setDeleteConfirm] = useState<Ad | null>(null);
     const [renewConfirm, setRenewConfirm] = useState<Ad | null>(null);
+    const [extendModal, setExtendModal] = useState<{ ad: Ad; mode: 'extend' | 'renew' } | null>(null);
     const [activeTab, setActiveTab] = useState<'my-ads' | 'saved'>('my-ads');
 
     React.useEffect(() => {
@@ -61,7 +63,8 @@ export function Dashboard() {
 
     const handleEdit = (ad: Ad) => navigate(`/edit-ad/${ad.id}`);
     const handleDelete = (ad: Ad) => setDeleteConfirm(ad);
-    const handleRenew = (ad: Ad) => setRenewConfirm(ad);
+    const handleRenew = (ad: Ad) => setExtendModal({ ad, mode: 'renew' });
+    const handleExtend = (ad: Ad) => setExtendModal({ ad, mode: 'extend' });
 
     const confirmDelete = async () => {
         if (deleteConfirm && user) {
@@ -80,6 +83,19 @@ export function Dashboard() {
             await renewAd(renewConfirm.id, 7);
             showToast('Ad renewed for 7 days!', 'success');
             setRenewConfirm(null);
+        }
+    };
+
+    const confirmExtend = async (days: number) => {
+        if (extendModal) {
+            if (extendModal.mode === 'extend') {
+                await extendAd(extendModal.ad.id, days);
+                showToast(`Ad extended by ${days} days!`, 'success');
+            } else {
+                await renewAd(extendModal.ad.id, days);
+                showToast(`Ad renewed for ${days} days!`, 'success');
+            }
+            setExtendModal(null);
         }
     };
 
@@ -170,12 +186,12 @@ export function Dashboard() {
                     </div>
                     <div className="stat-card">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-red-100 dark:bg-red-900/50 rounded-xl flex items-center justify-center">
-                                <XCircle className="text-red-600 dark:text-red-400" size={20} />
+                            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center">
+                                <CheckSquare className="text-blue-600 dark:text-blue-400" size={20} />
                             </div>
                             <div>
-                                <div className="stat-value">{rejectedAds.length}</div>
-                                <div className="stat-label">Rejected</div>
+                                <div className="stat-value text-blue-600">{expiredAds.length}</div>
+                                <div className="stat-label">Fulfilled</div>
                             </div>
                         </div>
                     </div>
@@ -242,13 +258,21 @@ export function Dashboard() {
                                             {approvedAds.map(ad => (
                                                 <div key={ad.id} className="relative">
                                                     <AdCard ad={ad} showActions onEdit={handleEdit} onDelete={handleDelete} />
-                                                    <div className="mt-2 p-3 bg-white rounded-xl border border-gray-100 flex justify-between text-xs text-gray-500">
-                                                        <span className="flex items-center gap-1"><Eye size={12} /> {ad.views_count}</span>
-                                                        <span className="flex items-center gap-1"><Phone size={12} /> {ad.calls_count}</span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Clock size={12} />
-                                                            {formatRelativeTime(new Date(ad.expires_at)).replace(' ago', ' left')}
-                                                        </span>
+                                                    <div className="mt-2 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+                                                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                            <span className="flex items-center gap-1"><Eye size={12} /> {ad.views_count}</span>
+                                                            <span className="flex items-center gap-1"><Phone size={12} /> {ad.calls_count}</span>
+                                                            <span className="flex items-center gap-1">
+                                                                <Timer size={12} />
+                                                                {formatTimeRemaining(new Date(ad.expires_at))}
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleExtend(ad)}
+                                                            className="w-full py-2 text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors flex items-center justify-center gap-1"
+                                                        >
+                                                            <Clock size={12} /> Extend Duration
+                                                        </button>
                                                     </div>
                                                 </div>
                                             ))}
@@ -278,21 +302,33 @@ export function Dashboard() {
                                     </div>
                                 )}
 
-                                {/* Expired Ads */}
+                                {/* Fulfilled Ads (Expired) */}
                                 {expiredAds.length > 0 && (
                                     <div>
-                                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Expired Ads</h3>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <CheckSquare className="text-blue-500" size={16} />
+                                            <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider">Fulfilled Ads ({expiredAds.length})</h3>
+                                        </div>
+                                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 mb-4">
+                                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                                                These ads have completed their duration. You can renew them to make them active again.
+                                            </p>
+                                        </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                             {expiredAds.map(ad => (
-                                                <div key={ad.id} className="relative opacity-60">
-                                                    <div className="absolute top-4 right-4 z-10 badge-warning">Expired</div>
-                                                    <AdCard ad={ad} showActions onEdit={handleEdit} onDelete={handleDelete} />
-                                                    <div className="mt-2 flex gap-2">
+                                                <div key={ad.id} className="relative">
+                                                    <div className="absolute top-4 right-4 z-10">
+                                                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1">
+                                                            <CheckSquare size={12} /> Fulfilled
+                                                        </span>
+                                                    </div>
+                                                    <AdCard ad={ad} onEdit={handleEdit} onDelete={handleDelete} />
+                                                    <div className="mt-2">
                                                         <button
                                                             onClick={() => handleRenew(ad)}
-                                                            className="btn-primary btn-sm flex-1"
+                                                            className="w-full py-2.5 text-sm font-medium text-white bg-primary-500 rounded-xl hover:bg-primary-600 transition-colors flex items-center justify-center gap-2"
                                                         >
-                                                            <RefreshCw size={14} /> Renew
+                                                            <RefreshCw size={14} /> Renew Ad
                                                         </button>
                                                     </div>
                                                 </div>
@@ -348,15 +384,14 @@ export function Dashboard() {
                 variant="danger"
             />
 
-            {/* Renew Confirmation */}
-            <ConfirmDialog
-                isOpen={!!renewConfirm}
-                onClose={() => setRenewConfirm(null)}
-                onConfirm={confirmRenew}
-                title="Renew Ad"
-                message={`Renew "${renewConfirm?.title}" for another 7 days?`}
-                confirmText="Renew"
-                variant="default"
+            {/* Renew/Extend Modal */}
+            <ExtendDurationModal
+                isOpen={!!extendModal}
+                onClose={() => setExtendModal(null)}
+                onConfirm={confirmExtend}
+                adTitle={extendModal?.ad.title || ''}
+                currentExpiry={extendModal ? new Date(extendModal.ad.expires_at) : new Date()}
+                mode={extendModal?.mode || 'extend'}
             />
         </div>
     );

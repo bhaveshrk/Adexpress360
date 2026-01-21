@@ -158,6 +158,22 @@ export const formatRelativeTime = (date: Date): string => {
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 };
 
+// Format time remaining until expiry (precise countdown)
+export const formatTimeRemaining = (expiresAt: Date): string => {
+    const now = new Date();
+    const diffMs = expiresAt.getTime() - now.getTime();
+
+    if (diffMs <= 0) return 'Expired';
+
+    const days = Math.floor(diffMs / 86400000);
+    const hours = Math.floor((diffMs % 86400000) / 3600000);
+    const minutes = Math.floor((diffMs % 3600000) / 60000);
+
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+};
+
 // Format currency
 export const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-IN', {
