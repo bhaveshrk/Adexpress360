@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { getAdStatsHistory } from '../lib/analytics';
 import { Loader2 } from 'lucide-react';
 
@@ -15,7 +15,7 @@ interface DailyStat {
     calls_count: number;
 }
 
-export function AnalyticsChart({ adId }: AnalyticsChartProps) {
+export function AnalyticsChart({ adId, totalViews, totalCalls }: AnalyticsChartProps) {
     const [data, setData] = useState<DailyStat[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -146,11 +146,9 @@ export function AnalyticsChart({ adId }: AnalyticsChartProps) {
                                 </ResponsiveContainer>
                             </div>
                         </div>
-                    </div>
                     )}
-        </>
-    )
-}
-        </div >
+                </>
+            )}
+        </div>
     );
 }
