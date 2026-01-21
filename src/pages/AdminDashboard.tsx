@@ -121,21 +121,29 @@ export function AdminDashboard() {
     };
 
     const handleApprove = async (ad: Ad) => {
-        // Optimistic update - update local state immediately
-        setAds(prev => prev.map(a =>
-            a.id === ad.id ? { ...a, approval_status: 'approved', approved_at: new Date().toISOString() } : a
-        ));
+        const approvedAd = { ...ad, approval_status: 'approved' as const, approved_at: new Date().toISOString() };
 
-        // Update in localStorage
+        // Optimistic update - update local state immediately
+        setAds(prev => prev.map(a => a.id === ad.id ? approvedAd : a));
+
+        // Update stats immediately
+        setStats(prev => ({
+            ...prev,
+            pendingAds: prev.pendingAds - 1,
+            approvedAds: prev.approvedAds + 1
+        }));
+
+        // Update in localStorage - add or update the ad
         try {
             const stored = localStorage.getItem('adexpress360_ads_local');
-            if (stored) {
-                const localAds = JSON.parse(stored);
-                const updatedAds = localAds.map((a: Ad) =>
-                    a.id === ad.id ? { ...a, approval_status: 'approved', approved_at: new Date().toISOString() } : a
-                );
-                localStorage.setItem('adexpress360_ads_local', JSON.stringify(updatedAds));
+            const localAds: Ad[] = stored ? JSON.parse(stored) : [];
+            const existingIndex = localAds.findIndex(a => a.id === ad.id);
+            if (existingIndex >= 0) {
+                localAds[existingIndex] = approvedAd;
+            } else {
+                localAds.unshift(approvedAd);
             }
+            localStorage.setItem('adexpress360_ads_local', JSON.stringify(localAds));
         } catch (e) {
             console.log('Local update error:', e);
         }
@@ -151,8 +159,6 @@ export function AdminDashboard() {
         }
 
         showToast('Ad approved!', 'success');
-        // Refresh to sync stats
-        fetchData();
     };
 
     const handleReject = async () => {
