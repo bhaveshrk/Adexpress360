@@ -11,6 +11,7 @@ import {
 import {
     BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
+import { AnalyticsChart } from '../components/AnalyticsChart';
 
 interface AdminStats {
     totalAds: number;
@@ -31,6 +32,7 @@ export function AdminDashboard() {
     const [rejectReason, setRejectReason] = useState('');
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [showPostModal, setShowPostModal] = useState(false);
+    const [showDetailModal, setShowDetailModal] = useState<Ad | null>(null);
 
     // Check admin session
     useEffect(() => {
@@ -537,10 +539,18 @@ export function AdminDashboard() {
                                             <td className="py-4 px-4">
                                                 <div className="text-xs text-gray-500 dark:text-gray-400">
                                                     <span className="flex items-center gap-1"><Eye size={12} /> {ad.views_count}</span>
+                                                    <span className="flex items-center gap-1 mt-1"><Phone size={12} /> {ad.calls_count}</span>
                                                 </div>
                                             </td>
                                             <td className="py-4 px-4 text-right">
                                                 <div className="flex items-center justify-end gap-1">
+                                                    <button
+                                                        onClick={() => setShowDetailModal(ad)}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-lg"
+                                                        title="View Details"
+                                                    >
+                                                        <Eye size={18} />
+                                                    </button>
                                                     {ad.approval_status === 'pending' && (
                                                         <>
                                                             <button
@@ -596,8 +606,15 @@ export function AdminDashboard() {
                                         <span className="flex items-center gap-1"><MapPin size={10} /> {ad.city}</span>
                                         <span className="flex items-center gap-1"><Phone size={10} /> {ad.phone_number}</span>
                                         <span className="flex items-center gap-1"><Eye size={10} /> {ad.views_count}</span>
+                                        <span className="flex items-center gap-1"><Phone size={10} /> {ad.calls_count}</span>
                                     </div>
                                     <div className="flex items-center gap-2 mt-3">
+                                        <button
+                                            onClick={() => setShowDetailModal(ad)}
+                                            className="flex-1 py-2 px-3 bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium"
+                                        >
+                                            View Details
+                                        </button>
                                         {ad.approval_status === 'pending' && (
                                             <>
                                                 <button
@@ -629,149 +646,250 @@ export function AdminDashboard() {
             </div>
 
             {/* Reject Modal */}
-            {showRejectModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Reject Ad</h3>
-                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-                            Rejecting: <strong className="text-gray-900 dark:text-white">{selectedAd?.title}</strong>
-                        </p>
-                        <textarea
-                            value={rejectReason}
-                            onChange={(e) => setRejectReason(e.target.value)}
-                            placeholder="Enter reason for rejection..."
-                            className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl mb-4 resize-none h-24 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
-                            required
-                        />
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => { setShowRejectModal(false); setSelectedAd(null); setRejectReason(''); }}
-                                className="flex-1 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleReject}
-                                disabled={!rejectReason}
-                                className="flex-1 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                Reject Ad
-                            </button>
+            {
+                showRejectModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Reject Ad</h3>
+                            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+                                Rejecting: <strong className="text-gray-900 dark:text-white">{selectedAd?.title}</strong>
+                            </p>
+                            <textarea
+                                value={rejectReason}
+                                onChange={(e) => setRejectReason(e.target.value)}
+                                placeholder="Enter reason for rejection..."
+                                className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl mb-4 resize-none h-24 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
+                                required
+                            />
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => { setShowRejectModal(false); setSelectedAd(null); setRejectReason(''); }}
+                                    className="flex-1 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleReject}
+                                    disabled={!rejectReason}
+                                    className="flex-1 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Reject Ad
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Post Ad Modal (simplified) */}
-            {showPostModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Post Ad (Admin)</h3>
+            {
+                showPostModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Post Ad (Admin)</h3>
+                                <button
+                                    onClick={() => setShowPostModal(false)}
+                                    className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+                                Post an ad on behalf of a user. You can enter any phone number.
+                            </p>
+                            <form onSubmit={async (e) => {
+                                e.preventDefault();
+                                const formData = new FormData(e.currentTarget);
+                                const durationDays = parseInt(formData.get('duration') as string) || 30;
+
+                                // Save to localStorage for the hybrid approach
+                                const newAd = {
+                                    id: crypto.randomUUID(),
+                                    user_id: 'admin',
+                                    title: String(formData.get('title') || ''),
+                                    subject: String(formData.get('subject') || ''),
+                                    description: String(formData.get('description') || ''),
+                                    phone_number: String(formData.get('phone') || ''),
+                                    category: String(formData.get('category') || ''),
+                                    city: String(formData.get('city') || ''),
+                                    location: String(formData.get('location') || ''),
+                                    created_at: new Date().toISOString(),
+                                    expires_at: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString(),
+                                    approval_status: 'approved',
+                                    is_active: true,
+                                    is_featured: false,
+                                    views_count: 0,
+                                    calls_count: 0,
+                                };
+
+                                // Save to localStorage
+                                try {
+                                    const stored = localStorage.getItem('adexpress360_ads_local');
+                                    const localAds = stored ? JSON.parse(stored) : [];
+                                    localAds.unshift(newAd);
+                                    localStorage.setItem('adexpress360_ads_local', JSON.stringify(localAds));
+                                } catch (err) {
+                                    console.log('Local save error:', err);
+                                }
+
+                                // Also try Supabase
+                                try {
+                                    const { error: insertError } = await supabase.from('ads').insert({
+                                        ...newAd,
+                                        user_id: (await supabase.auth.getUser()).data.user?.id || 'admin',
+                                    });
+                                    if (insertError) throw insertError;
+                                } catch (err) {
+                                    console.log('Supabase insert skipped:', err);
+                                }
+
+                                showToast('Ad created successfully!', 'success');
+                                setShowPostModal(false);
+                                fetchData();
+                            }} className="space-y-4">
+                                <input name="title" placeholder="Title" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
+                                <input name="subject" placeholder="Headline" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
+                                <textarea name="description" placeholder="Description" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500 h-24 resize-none" />
+                                <input name="phone" placeholder="Phone Number" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
+                                <input name="location" placeholder="Locality (e.g. Koramangala)" className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
+
+                                <select name="category" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500">
+                                    {CATEGORIES.map(cat => (
+                                        <option key={cat.id} value={cat.id}>{cat.label}</option>
+                                    ))}
+                                </select>
+                                <select name="city" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500">
+                                    {Object.entries(CITIES_BY_STATE).map(([state, cities]) => (
+                                        <optgroup key={state} label={state} className="bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white">
+                                            {cities.map(city => (
+                                                <option key={city} value={city} className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">{city}</option>
+                                            ))}
+                                        </optgroup>
+                                    ))}
+                                </select>
+
+                                {/* Duration Selector */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Ad Duration</label>
+                                    <select name="duration" required className="w-full p-3 border rounded-xl">
+                                        <option value="7">1 Week</option>
+                                        <option value="14">2 Weeks</option>
+                                        <option value="30" selected>1 Month</option>
+                                        <option value="60">2 Months</option>
+                                        <option value="90">3 Months</option>
+                                        <option value="180">6 Months</option>
+                                        <option value="365">1 Year</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={() => setShowPostModal(false)} className="flex-1 py-3 border rounded-xl">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="flex-1 py-3 bg-primary-500 text-white rounded-xl">
+                                        Create Ad
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+            {/* Ad Detail Modal */}
+            {showDetailModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+                        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Ad Details</h2>
                             <button
-                                onClick={() => setShowPostModal(false)}
-                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                                onClick={() => setShowDetailModal(null)}
+                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                             >
                                 <X size={20} />
                             </button>
                         </div>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-                            Post an ad on behalf of a user. You can enter any phone number.
-                        </p>
-                        <form onSubmit={async (e) => {
-                            e.preventDefault();
-                            const formData = new FormData(e.currentTarget);
-                            const durationDays = parseInt(formData.get('duration') as string) || 30;
-
-                            // Save to localStorage for the hybrid approach
-                            const newAd = {
-                                id: crypto.randomUUID(),
-                                user_id: 'admin',
-                                title: String(formData.get('title') || ''),
-                                subject: String(formData.get('subject') || ''),
-                                description: String(formData.get('description') || ''),
-                                phone_number: String(formData.get('phone') || ''),
-                                category: String(formData.get('category') || ''),
-                                city: String(formData.get('city') || ''),
-                                location: String(formData.get('location') || ''),
-                                created_at: new Date().toISOString(),
-                                expires_at: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString(),
-                                approval_status: 'approved',
-                                is_active: true,
-                                is_featured: false,
-                                views_count: 0,
-                                calls_count: 0,
-                            };
-
-                            // Save to localStorage
-                            try {
-                                const stored = localStorage.getItem('adexpress360_ads_local');
-                                const localAds = stored ? JSON.parse(stored) : [];
-                                localAds.unshift(newAd);
-                                localStorage.setItem('adexpress360_ads_local', JSON.stringify(localAds));
-                            } catch (err) {
-                                console.log('Local save error:', err);
-                            }
-
-                            // Also try Supabase
-                            try {
-                                const { error: insertError } = await supabase.from('ads').insert({
-                                    ...newAd,
-                                    user_id: (await supabase.auth.getUser()).data.user?.id || 'admin',
-                                });
-                                if (insertError) throw insertError;
-                            } catch (err) {
-                                console.log('Supabase insert skipped:', err);
-                            }
-
-                            showToast('Ad created successfully!', 'success');
-                            setShowPostModal(false);
-                            fetchData();
-                        }} className="space-y-4">
-                            <input name="title" placeholder="Title" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
-                            <input name="subject" placeholder="Headline" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
-                            <textarea name="description" placeholder="Description" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500 h-24 resize-none" />
-                            <input name="phone" placeholder="Phone Number" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
-                            <input name="location" placeholder="Locality (e.g. Koramangala)" className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary-500" />
-
-                            <select name="category" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500">
-                                {CATEGORIES.map(cat => (
-                                    <option key={cat.id} value={cat.id}>{cat.label}</option>
-                                ))}
-                            </select>
-                            <select name="city" required className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500">
-                                {Object.entries(CITIES_BY_STATE).map(([state, cities]) => (
-                                    <optgroup key={state} label={state} className="bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white">
-                                        {cities.map(city => (
-                                            <option key={city} value={city} className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">{city}</option>
-                                        ))}
-                                    </optgroup>
-                                ))}
-                            </select>
-
-                            {/* Duration Selector */}
+                        <div className="p-6 space-y-6">
+                            {/* Title & Subject */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Ad Duration</label>
-                                <select name="duration" required className="w-full p-3 border rounded-xl">
-                                    <option value="7">1 Week</option>
-                                    <option value="14">2 Weeks</option>
-                                    <option value="30" selected>1 Month</option>
-                                    <option value="60">2 Months</option>
-                                    <option value="90">3 Months</option>
-                                    <option value="180">6 Months</option>
-                                    <option value="365">1 Year</option>
-                                </select>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{showDetailModal.title}</h3>
+                                <p className="text-primary-600 dark:text-primary-400 font-medium">{showDetailModal.subject}</p>
                             </div>
 
-                            <div className="flex gap-2">
-                                <button type="button" onClick={() => setShowPostModal(false)} className="flex-1 py-3 border rounded-xl">
-                                    Cancel
-                                </button>
-                                <button type="submit" className="flex-1 py-3 bg-primary-500 text-white rounded-xl">
-                                    Create Ad
-                                </button>
+                            {/* Status Badge */}
+                            <div className="flex items-center gap-2">
+                                {getStatusBadge(showDetailModal.approval_status || 'pending')}
+                                {showDetailModal.is_featured && (
+                                    <span className="px-2 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 rounded-full text-xs font-medium">⭐ Featured</span>
+                                )}
                             </div>
-                        </form>
+
+                            {/* Description */}
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Description</h4>
+                                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{showDetailModal.description}</p>
+                            </div>
+
+                            {/* Details Grid */}
+                            <div className="grid grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
+                                <div>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 block">Category</span>
+                                    <span className="text-sm font-medium dark:text-white">{CATEGORIES.find(c => c.id === showDetailModal.category)?.icon} {CATEGORIES.find(c => c.id === showDetailModal.category)?.label}</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 block">City</span>
+                                    <span className="text-sm font-medium dark:text-white flex items-center gap-1"><MapPin size={12} /> {showDetailModal.city}</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 block">Phone Number</span>
+                                    <span className="text-sm font-medium dark:text-white flex items-center gap-1"><Phone size={12} /> +91 {showDetailModal.phone_number}</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 block">Location</span>
+                                    <span className="text-sm font-medium dark:text-white">{showDetailModal.location || 'Not specified'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 block">Created</span>
+                                    <span className="text-sm font-medium dark:text-white">{new Date(showDetailModal.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 block">Expires</span>
+                                    <span className="text-sm font-medium dark:text-white">{new Date(showDetailModal.expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                </div>
+                            </div>
+
+                            {/* Stats Summary */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 text-center">
+                                    <Eye className="mx-auto text-blue-500 mb-1" size={24} />
+                                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{showDetailModal.views_count.toLocaleString()}</div>
+                                    <div className="text-xs text-blue-500">Total Views</div>
+                                </div>
+                                <div className="bg-green-50 dark:bg-green-900/30 rounded-xl p-4 text-center">
+                                    <Phone className="mx-auto text-green-500 mb-1" size={24} />
+                                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{showDetailModal.calls_count}</div>
+                                    <div className="text-xs text-green-500">Total Calls</div>
+                                </div>
+                            </div>
+
+                            {/* Analytics Chart */}
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Analytics (Last 30 Days)</h4>
+                                <AnalyticsChart
+                                    adId={showDetailModal.id}
+                                    totalViews={showDetailModal.views_count}
+                                    totalCalls={showDetailModal.calls_count}
+                                />
+                            </div>
+
+                            {/* Rejection Reason (if rejected) */}
+                            {showDetailModal.approval_status === 'rejected' && showDetailModal.rejection_reason && (
+                                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                                    <h4 className="text-sm font-semibold text-red-600 dark:text-red-400 mb-1">Rejection Reason</h4>
+                                    <p className="text-gray-700 dark:text-gray-300">{showDetailModal.rejection_reason}</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
