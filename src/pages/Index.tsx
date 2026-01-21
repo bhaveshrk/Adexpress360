@@ -33,7 +33,7 @@ export function Index() {
                         <Link to="/post-ad" className="btn-lg bg-white text-primary-600 hover:bg-gray-100 rounded-xl font-semibold px-8 py-3">
                             Post Free Ad
                         </Link>
-                        <Link to="/category/all" className="btn-lg bg-primary-500 text-white hover:bg-primary-400 rounded-xl font-semibold px-8 py-3 border border-primary-400">
+                        <Link to="/browse" className="btn-lg bg-primary-500 text-white hover:bg-primary-400 rounded-xl font-semibold px-8 py-3 border border-primary-400">
                             Browse All Ads
                         </Link>
                     </div>

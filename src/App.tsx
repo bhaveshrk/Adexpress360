@@ -1,4 +1,4 @@
-// Build: v2.0.1 - Force Vercel redeploy
+// Build: v2.0.2 - Added BrowseAds page
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AdsProvider } from './contexts/AdsContext';
@@ -13,6 +13,7 @@ import { Category } from './pages/Category';
 import { AdminLogin } from './pages/AdminLogin';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { NotFound } from './pages/NotFound';
+import { BrowseAds } from './pages/BrowseAds';
 
 function App() {
     return (
@@ -23,6 +24,7 @@ function App() {
                         <ToastProvider>
                             <Routes>
                                 <Route path="/" element={<Index />} />
+                                <Route path="/browse" element={<BrowseAds />} />
                                 <Route path="/auth" element={<Auth />} />
                                 <Route path="/post-ad" element={<PostAd />} />
                                 <Route path="/dashboard" element={<Dashboard />} />
