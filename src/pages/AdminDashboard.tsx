@@ -95,9 +95,9 @@ export function AdminDashboard() {
                 rejectedAds: mergedAds.filter(a => a.approval_status === 'rejected').length,
                 totalUsers: 0,
             });
-            // Fetch user count
+            // Fetch user count from user_accounts table (phone registrations)
             const { count } = await supabase
-                .from('profiles')
+                .from('user_accounts')
                 .select('*', { count: 'exact', head: true });
 
             setStats(prev => ({ ...prev, totalUsers: count || 0 }));
