@@ -9,7 +9,7 @@ import { ExtendDurationModal } from '../components/ExtendDurationModal';
 import { Ad } from '../types';
 import { formatTimeRemaining } from '../utils/security';
 import { AnalyticsChart } from '../components/AnalyticsChart';
-import { ArrowLeft, Plus, Eye, Phone, TrendingUp, Clock, Bookmark, RefreshCw, Settings, AlertCircle, CheckCircle, XCircle, CheckSquare, Timer, BarChart2, X } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, Phone, TrendingUp, Clock, Bookmark, RefreshCw, Settings, AlertCircle, CheckCircle, XCircle, CheckSquare, Timer, BarChart2, X, Search } from 'lucide-react';
 
 // Get saved ads from localStorage
 const SAVED_ADS_KEY = 'adexpress360_saved_ads';
@@ -32,7 +32,27 @@ export function Dashboard() {
     const [renewConfirm, setRenewConfirm] = useState<Ad | null>(null);
     const [extendModal, setExtendModal] = useState<{ ad: Ad; mode: 'extend' | 'renew' } | null>(null);
     const [analyticsModal, setAnalyticsModal] = useState<Ad | null>(null);
-    const [activeTab, setActiveTab] = useState<'my-ads' | 'saved'>('my-ads');
+    const [activeTab, setActiveTab] = useState<'my-ads' | 'saved' | 'searches'>('my-ads');
+    const [savedSearches, setSavedSearches] = useState<any[]>([]);
+
+    // @ts-ignore
+    const { getSavedSearches, deleteSavedSearch } = useAds();
+
+    React.useEffect(() => {
+        if (user) {
+            getSavedSearches(user.id).then(setSavedSearches);
+        }
+    }, [user, getSavedSearches]);
+
+    const handleSearchDelete = async (id: string, e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.confirm('Delete this saved search?')) {
+            await deleteSavedSearch(id);
+            setSavedSearches(prev => prev.filter(s => s.id !== id));
+            showToast('Search deleted', 'success');
+        }
+    };
 
     React.useEffect(() => {
         if (!authLoading && !user) navigate('/auth');
@@ -114,6 +134,26 @@ export function Dashboard() {
         }
     };
 
+    // Expiry Checklist (<= 2 days)
+    const expiringSoonAds = approvedAds.filter(ad => {
+        const daysRemaining = (new Date(ad.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);
+        return daysRemaining > 0 && daysRemaining <= 2;
+    });
+
+    // Request notification permission and send alert
+    React.useEffect(() => {
+        if (expiringSoonAds.length > 0 && 'Notification' in window) {
+            if (Notification.permission === 'granted') {
+                new Notification('Ads Expiring Soon!', {
+                    body: `You have ${expiringSoonAds.length} ad(s) expiring within 2 days. Renew them now to keep them active.`,
+                    icon: '/vite.svg'
+                });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission();
+            }
+        }
+    }, [expiringSoonAds.length]);
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Header */}
@@ -140,6 +180,37 @@ export function Dashboard() {
             </div>
 
             <div className="container-app py-8">
+                {/* Expiry Warning Banner */}
+                {expiringSoonAds.length > 0 && (
+                    <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-900/50 rounded-xl p-4 mb-8 flex items-start gap-4 animate-fade-in shadow-sm">
+                        <div className="p-2 bg-orange-100 dark:bg-orange-800/40 rounded-lg shrink-0">
+                            <AlertCircle className="text-orange-600 dark:text-orange-400" size={24} />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-1">
+                                Action Required: {expiringSoonAds.length} Ad{expiringSoonAds.length > 1 ? 's' : ''} Expiring Soon
+                            </h3>
+                            <p className="text-orange-700 dark:text-orange-300 text-sm mb-3">
+                                Some of your ads will expire within 2 days. Renew them now to prevent them from becoming inactive.
+                            </p>
+                            <div className="flex gap-2 flex-wrap">
+                                {expiringSoonAds.slice(0, 3).map(ad => (
+                                    <button
+                                        key={ad.id}
+                                        onClick={() => handleRenew(ad)}
+                                        className="text-xs font-medium bg-white dark:bg-gray-800 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700/50 px-3 py-1.5 rounded-lg shadow-sm hover:shadow-md transition-all flex items-center gap-1"
+                                    >
+                                        Renew "{ad.title.slice(0, 15)}..."
+                                    </button>
+                                ))}
+                                {expiringSoonAds.length > 3 && (
+                                    <span className="text-xs text-orange-600 dark:text-orange-400 self-center">+{expiringSoonAds.length - 3} more</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 mb-8">
                     <div className="stat-card">
@@ -212,13 +283,23 @@ export function Dashboard() {
                     </button>
                     <button
                         onClick={() => setActiveTab('saved')}
-                        className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${activeTab === 'saved'
+                        className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'saved'
                             ? 'border-primary-500 text-primary-600 dark:text-primary-400'
                             : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                     >
                         <Bookmark size={14} />
-                        Saved ({savedAds.length})
+                        Bookmarks ({savedAds.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('searches')}
+                        className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'searches'
+                            ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                            }`}
+                    >
+                        <Search size={14} />
+                        Saved Searches ({savedSearches.length})
                     </button>
                 </div>
 
@@ -374,12 +455,66 @@ export function Dashboard() {
                                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Bookmark className="text-gray-400" size={24} />
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2">No saved ads</h3>
-                                <p className="text-gray-500 mb-6">Save ads you're interested in for quick access</p>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookmarks yet</h3>
+                                <p className="text-gray-500 mb-6">Bookmark ads you're interested in for quick access</p>
                                 <Link to="/" className="btn-secondary">Browse Ads</Link>
                             </div>
                         )}
                     </>
+                )}
+
+                {/* Saved Searches Tab */}
+                {activeTab === 'searches' && (
+                    <div className="space-y-4">
+                        {savedSearches.length > 0 ? (
+                            savedSearches.map(search => (
+                                <Link
+                                    key={search.id}
+                                    to={`/?q=${search.filter_criteria.searchQuery || ''}&category=${search.filter_criteria.category || 'all'}&city=${search.filter_criteria.city || 'all'}`}
+                                    className="block bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors group relative"
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 mb-1">
+                                                {search.name}
+                                            </h3>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                Saved on {new Date(search.created_at).toLocaleDateString()}
+                                            </p>
+                                            <div className="flex gap-2 mt-2">
+                                                {search.filter_criteria.category !== 'all' && (
+                                                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md text-xs text-gray-600 dark:text-gray-300">
+                                                        {search.filter_criteria.category}
+                                                    </span>
+                                                )}
+                                                {search.filter_criteria.city !== 'all' && (
+                                                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md text-xs text-gray-600 dark:text-gray-300">
+                                                        {search.filter_criteria.city}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={(e) => handleSearchDelete(search.id, e)}
+                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
+                                            title="Delete saved search"
+                                        >
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                </Link>
+                            ))
+                        ) : (
+                            <div className="card text-center py-16">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Search className="text-gray-400" size={24} />
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">No saved searches</h3>
+                                <p className="text-gray-500 mb-6">Save your search filters on the Browse page</p>
+                                <Link to="/" className="btn-secondary">Browse Ads</Link>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 

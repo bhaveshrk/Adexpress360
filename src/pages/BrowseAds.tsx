@@ -4,6 +4,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { AdCard } from '../components/AdCard';
 import { useAds } from '../contexts/AdsContext';
+import { useAuth } from '../contexts/AuthContext';
 import { CATEGORIES, CITIES, AdCategory } from '../types';
 import { Search, Filter, X, ChevronDown, Clock, ArrowUpDown, Star } from 'lucide-react';
 
@@ -117,6 +118,42 @@ export function BrowseAds() {
     };
 
     const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all' || dateFilter !== 'all';
+
+    // Save Search handler
+    const handleSaveSearch = async () => {
+        if (!user) {
+            // Redirect to login or show toast
+            // For now assume user might be logged in or just show warning
+            return;
+        }
+
+        const defaultName = `${selectedCategory !== 'all' ? selectedCategory : 'All Categories'} in ${selectedCity !== 'all' ? selectedCity : 'All Cities'}`;
+        const name = window.prompt('Name your saved search:', defaultName);
+
+        if (name) {
+            const filterState = {
+                searchQuery,
+                category: selectedCategory,
+                city: selectedCity,
+                // We'll save these too as part of "filter_criteria" JSON
+                dateFilter,
+                sortBy
+            };
+
+            // @ts-ignore - filterState has extra fields but that's fine for JSON
+            const result = await saveSearch(name, filterState, user.id);
+            if (result.success) {
+                // Show success toast (need to add toast context here if not present)
+                alert('Search saved successfully! View it in your Dashboard.');
+            } else {
+                alert('Failed to save search: ' + result.error);
+            }
+        }
+    };
+
+    // Need user from context
+    const { user } = useAuth(); // Import useAuth
+    const { saveSearch } = useAds(); // Already have useAds but need saveSearch destuctured
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -244,15 +281,26 @@ export function BrowseAds() {
                                 </div>
                             </div>
 
-                            {/* Clear Filters */}
+                            {/* Action Buttons */}
                             {hasActiveFilters && (
-                                <button
-                                    onClick={clearFilters}
-                                    className="flex items-center gap-1 px-4 py-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors self-end"
-                                >
-                                    <X size={16} />
-                                    Clear All
-                                </button>
+                                <div className="flex items-end gap-2 ml-auto">
+                                    {user && (
+                                        <button
+                                            onClick={handleSaveSearch}
+                                            className="flex items-center gap-1 px-4 py-2.5 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                                        >
+                                            <Star size={16} />
+                                            Save Search
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={clearFilters}
+                                        className="flex items-center gap-1 px-4 py-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                    >
+                                        <X size={16} />
+                                        Clear All
+                                    </button>
+                                </div>
                             )}
                         </div>
                     )}

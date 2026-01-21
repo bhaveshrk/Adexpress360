@@ -22,6 +22,9 @@ interface AdsContextType {
     renewAd: (id: string, days: number) => Promise<boolean>;
     extendAd: (id: string, days: number) => Promise<boolean>;
     refreshAds: () => Promise<void>;
+    saveSearch: (name: string, filterState: AdsFilter, userId: string) => Promise<{ success: boolean; error?: string }>;
+    getSavedSearches: (userId: string) => Promise<any[]>;
+    deleteSavedSearch: (id: string) => Promise<boolean>;
 }
 
 const AdsContext = createContext<AdsContextType | undefined>(undefined);
@@ -378,10 +381,54 @@ export function AdsProvider({ children }: { children: ReactNode }) {
         return true;
     }, [ads]);
 
+    const saveSearch = useCallback(async (name: string, filterState: AdsFilter, userId: string): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const { error } = await supabase.from('saved_searches').insert({
+                user_id: userId,
+                name,
+                filter_criteria: filterState,
+            });
+
+            if (error) throw error;
+            return { success: true };
+        } catch (e: any) {
+            console.error('Error saving search:', e);
+            return { success: false, error: e.message };
+        }
+    }, []);
+
+    const getSavedSearches = useCallback(async (userId: string) => {
+        try {
+            const { data, error } = await supabase
+                .from('saved_searches')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.error('Error fetching saved searches:', e);
+            return [];
+        }
+    }, []);
+
+    const deleteSavedSearch = useCallback(async (id: string) => {
+        try {
+            const { error } = await supabase.from('saved_searches').delete().eq('id', id);
+            if (error) throw error;
+            return true;
+        } catch (e) {
+            console.error('Error deleting saved search:', e);
+            return false;
+        }
+    }, []);
+
     return (
         <AdsContext.Provider value={{
             ads, loading, filter, setFilter, getFilteredAds, getFeaturedAds, getUserAds,
-            getAdById, getCategoryCount, addAd, updateAd, deleteAd, incrementViews, incrementCalls, renewAd, extendAd, refreshAds,
+            getAdById, getCategoryCount, addAd, updateAd, deleteAd, incrementViews, incrementCalls,
+            renewAd, extendAd, refreshAds, saveSearch, getSavedSearches, deleteSavedSearch
         }}>
             {children}
         </AdsContext.Provider>
