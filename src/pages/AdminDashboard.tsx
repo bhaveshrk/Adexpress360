@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
@@ -6,8 +6,11 @@ import { Ad, CATEGORIES, CITIES_BY_STATE } from '../types';
 import {
     Shield, LogOut, Search, CheckCircle, XCircle, Clock, Eye,
     TrendingUp, Users, FileText, Plus, Edit, Trash2, MapPin,
-    Phone, ChevronDown, RefreshCw, X
+    Phone, ChevronDown, RefreshCw, X, BarChart3, PieChartIcon
 } from 'lucide-react';
+import {
+    BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
+} from 'recharts';
 
 interface AdminStats {
     totalAds: number;
@@ -213,6 +216,33 @@ export function AdminDashboard() {
         return ad.approval_status === activeTab;
     });
 
+    // Analytics Data
+    const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF6B6B'];
+
+    const categoryData = useMemo(() => {
+        const counts: Record<string, number> = {};
+        ads.forEach(ad => {
+            const cat = CATEGORIES.find(c => c.id === ad.category);
+            const label = cat?.label || ad.category;
+            counts[label] = (counts[label] || 0) + 1;
+        });
+        return Object.entries(counts)
+            .map(([name, value], i) => ({ name, value, fill: CHART_COLORS[i % CHART_COLORS.length] }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 8);
+    }, [ads]);
+
+    const cityData = useMemo(() => {
+        const counts: Record<string, number> = {};
+        ads.forEach(ad => {
+            counts[ad.city] = (counts[ad.city] || 0) + 1;
+        });
+        return Object.entries(counts)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 10);
+    }, [ads]);
+
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'pending':
@@ -312,6 +342,77 @@ export function AdminDashboard() {
                                 <div className="text-xs text-gray-500 dark:text-gray-400">Users</div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Analytics Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    {/* Ads by Category - Pie Chart */}
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4">
+                            <PieChartIcon className="text-primary-500" size={20} />
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Ads by Category</h3>
+                        </div>
+                        {categoryData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={280}>
+                                <PieChart>
+                                    <Pie
+                                        data={categoryData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={100}
+                                        paddingAngle={2}
+                                        dataKey="value"
+                                        label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
+                                        labelLine={false}
+                                    >
+                                        {categoryData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        itemStyle={{ color: '#fff' }}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-[280px] flex items-center justify-center text-gray-500">
+                                No data available
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Ads by City - Bar Chart */}
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4">
+                            <BarChart3 className="text-primary-500" size={20} />
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Top Cities</h3>
+                        </div>
+                        {cityData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={280}>
+                                <BarChart data={cityData} layout="vertical">
+                                    <XAxis type="number" stroke="#9CA3AF" />
+                                    <YAxis
+                                        dataKey="name"
+                                        type="category"
+                                        width={100}
+                                        stroke="#9CA3AF"
+                                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        itemStyle={{ color: '#fff' }}
+                                    />
+                                    <Bar dataKey="value" fill="#6366F1" radius={[0, 4, 4, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-[280px] flex items-center justify-center text-gray-500">
+                                No data available
+                            </div>
+                        )}
                     </div>
                 </div>
 

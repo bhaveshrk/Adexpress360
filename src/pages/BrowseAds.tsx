@@ -5,7 +5,10 @@ import { Footer } from '../components/Footer';
 import { AdCard } from '../components/AdCard';
 import { useAds } from '../contexts/AdsContext';
 import { CATEGORIES, CITIES, AdCategory } from '../types';
-import { Search, Filter, X, ChevronDown } from 'lucide-react';
+import { Search, Filter, X, ChevronDown, Clock, ArrowUpDown, Star } from 'lucide-react';
+
+type DateFilter = 'all' | '24h' | 'week' | 'month';
+type SortOption = 'newest' | 'oldest' | 'most_viewed' | 'ending_soon';
 
 export function BrowseAds() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -17,6 +20,8 @@ export function BrowseAds() {
         (searchParams.get('category') as AdCategory) || 'all'
     );
     const [selectedCity, setSelectedCity] = useState<string>(searchParams.get('city') || 'all');
+    const [dateFilter, setDateFilter] = useState<DateFilter>((searchParams.get('posted') as DateFilter) || 'all');
+    const [sortBy, setSortBy] = useState<SortOption>((searchParams.get('sort') as SortOption) || 'newest');
     const [showFilters, setShowFilters] = useState(false);
 
     // Update URL when filters change
@@ -25,18 +30,36 @@ export function BrowseAds() {
         if (searchQuery) params.set('q', searchQuery);
         if (selectedCategory !== 'all') params.set('category', selectedCategory);
         if (selectedCity !== 'all') params.set('city', selectedCity);
+        if (dateFilter !== 'all') params.set('posted', dateFilter);
+        if (sortBy !== 'newest') params.set('sort', sortBy);
         setSearchParams(params, { replace: true });
-    }, [searchQuery, selectedCategory, selectedCity, setSearchParams]);
+    }, [searchQuery, selectedCategory, selectedCity, dateFilter, sortBy, setSearchParams]);
 
-    // Filter ads
+    // Get date threshold based on filter
+    const getDateThreshold = (filter: DateFilter): Date | null => {
+        const now = new Date();
+        switch (filter) {
+            case '24h': return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            case 'week': return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            case 'month': return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            default: return null;
+        }
+    };
+
+    // Filter and sort ads
     const filteredAds = useMemo(() => {
-        return ads.filter(ad => {
+        const dateThreshold = getDateThreshold(dateFilter);
+
+        let result = ads.filter(ad => {
             if (!ad.is_active) return false;
             if (new Date(ad.expires_at) < new Date()) return false;
             if (ad.approval_status && ad.approval_status !== 'approved') return false;
 
             if (selectedCategory !== 'all' && ad.category !== selectedCategory) return false;
             if (selectedCity !== 'all' && ad.city !== selectedCity) return false;
+
+            // Date filter
+            if (dateThreshold && new Date(ad.created_at) < dateThreshold) return false;
 
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
@@ -51,7 +74,28 @@ export function BrowseAds() {
             }
             return true;
         });
-    }, [ads, selectedCategory, selectedCity, searchQuery]);
+
+        // Sort ads
+        result.sort((a, b) => {
+            // Featured ads always first
+            if (a.is_featured && !b.is_featured) return -1;
+            if (!a.is_featured && b.is_featured) return 1;
+
+            switch (sortBy) {
+                case 'oldest':
+                    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                case 'most_viewed':
+                    return b.views_count - a.views_count;
+                case 'ending_soon':
+                    return new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime();
+                case 'newest':
+                default:
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            }
+        });
+
+        return result;
+    }, [ads, selectedCategory, selectedCity, searchQuery, dateFilter, sortBy]);
 
     // Track views for displayed ads
     useEffect(() => {
@@ -68,9 +112,11 @@ export function BrowseAds() {
         setSearchQuery('');
         setSelectedCategory('all');
         setSelectedCity('all');
+        setDateFilter('all');
+        setSortBy('newest');
     };
 
-    const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all';
+    const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all' || dateFilter !== 'all';
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -105,8 +151,8 @@ export function BrowseAds() {
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-colors ${showFilters || hasActiveFilters
-                                    ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600 text-primary-600 dark:text-primary-400'
-                                    : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300'
+                                ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600 text-primary-600 dark:text-primary-400'
+                                : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300'
                                 }`}
                         >
                             <Filter size={20} />
@@ -162,6 +208,42 @@ export function BrowseAds() {
                                 </div>
                             </div>
 
+                            {/* Date Posted Filter */}
+                            <div className="relative flex-1 min-w-[150px]">
+                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Date Posted</label>
+                                <div className="relative">
+                                    <select
+                                        value={dateFilter}
+                                        onChange={e => setDateFilter(e.target.value as DateFilter)}
+                                        className="w-full appearance-none pl-4 pr-10 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                                    >
+                                        <option value="all">All Time</option>
+                                        <option value="24h">Last 24 Hours</option>
+                                        <option value="week">Last Week</option>
+                                        <option value="month">Last Month</option>
+                                    </select>
+                                    <Clock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                                </div>
+                            </div>
+
+                            {/* Sort By */}
+                            <div className="relative flex-1 min-w-[160px]">
+                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Sort By</label>
+                                <div className="relative">
+                                    <select
+                                        value={sortBy}
+                                        onChange={e => setSortBy(e.target.value as SortOption)}
+                                        className="w-full appearance-none pl-4 pr-10 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                                    >
+                                        <option value="newest">Newest First</option>
+                                        <option value="oldest">Oldest First</option>
+                                        <option value="most_viewed">Most Viewed</option>
+                                        <option value="ending_soon">Ending Soon</option>
+                                    </select>
+                                    <ArrowUpDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                                </div>
+                            </div>
+
                             {/* Clear Filters */}
                             {hasActiveFilters && (
                                 <button
@@ -180,8 +262,8 @@ export function BrowseAds() {
                         <button
                             onClick={() => setSelectedCategory('all')}
                             className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${selectedCategory === 'all'
-                                    ? 'bg-primary-500 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                ? 'bg-primary-500 text-white'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                                 }`}
                         >
                             All
@@ -191,8 +273,8 @@ export function BrowseAds() {
                                 key={cat.id}
                                 onClick={() => setSelectedCategory(cat.id)}
                                 className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${selectedCategory === cat.id
-                                        ? 'bg-primary-500 text-white'
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                    ? 'bg-primary-500 text-white'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                                     }`}
                             >
                                 <span>{cat.icon}</span>
