@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
@@ -6,12 +6,18 @@ import { Ad, CATEGORIES, CITIES_BY_STATE } from '../types';
 import {
     Shield, LogOut, Search, CheckCircle, XCircle, Clock, Eye,
     TrendingUp, Users, FileText, Plus, Edit, Trash2, MapPin,
-    Phone, ChevronDown, RefreshCw, X, BarChart3, PieChartIcon
+    Phone, ChevronDown, ChevronUp, RefreshCw, X, BarChart3, PieChartIcon,
+    Upload, Download, AlertCircle, FileSpreadsheet, History, AlertTriangle, Save, Pencil
 } from 'lucide-react';
 import {
     BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { AnalyticsChart } from '../components/AnalyticsChart';
+import {
+    parseFile, convertToAds, generateTemplate, BulkAdData, ValidationError, ParseResult,
+    generateErrorReport, checkForDuplicates, DuplicateResult, exportAdsToExcel,
+    saveUploadToHistory, getUploadHistory, UploadHistoryItem
+} from '../utils/bulkUploadParser';
 
 interface AdminStats {
     totalAds: number;
@@ -33,6 +39,23 @@ export function AdminDashboard() {
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [showPostModal, setShowPostModal] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState<Ad | null>(null);
+
+    // Bulk upload state
+    const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
+    const [bulkUploadFile, setBulkUploadFile] = useState<File | null>(null);
+    const [bulkParseResult, setBulkParseResult] = useState<ParseResult | null>(null);
+    const [bulkUploadLoading, setBulkUploadLoading] = useState(false);
+    const [bulkUploadStep, setBulkUploadStep] = useState<'select' | 'preview' | 'uploading' | 'done'>('select');
+
+    // Enhanced bulk upload state
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadHistory, setUploadHistory] = useState<UploadHistoryItem[]>([]);
+    const [showUploadHistory, setShowUploadHistory] = useState(false);
+    const [duplicateResult, setDuplicateResult] = useState<DuplicateResult | null>(null);
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [editingRowIndex, setEditingRowIndex] = useState<number | null>(null);
+    const [editedRowData, setEditedRowData] = useState<BulkAdData | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Check admin session
     useEffect(() => {
@@ -60,6 +83,13 @@ export function AdminDashboard() {
 
         checkAdmin();
     }, [navigate]);
+
+    // Load upload history when modal opens
+    useEffect(() => {
+        if (showBulkUploadModal) {
+            setUploadHistory(getUploadHistory());
+        }
+    }, [showBulkUploadModal]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -475,8 +505,33 @@ export function AdminDashboard() {
                         ))}
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={fetchData} className="p-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <button onClick={fetchData} className="p-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700" title="Refresh">
                             <RefreshCw size={18} />
+                        </button>
+                        <button
+                            onClick={() => exportAdsToExcel(ads)}
+                            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+                            title="Export all ads to Excel"
+                        >
+                            <Download size={18} /> <span className="hidden sm:inline">Export Ads</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                setShowBulkUploadModal(true);
+                                setBulkUploadStep('select');
+                                setBulkUploadFile(null);
+                                setBulkParseResult(null);
+                                setDuplicateResult(null);
+                                setUploadProgress(0);
+                                setEditingRowIndex(null);
+                                setEditedRowData(null);
+                                if (fileInputRef.current) {
+                                    fileInputRef.current.value = '';
+                                }
+                            }}
+                            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 text-sm"
+                        >
+                            <Upload size={18} /> <span className="hidden sm:inline">Bulk Upload</span>
                         </button>
                         <button
                             onClick={() => setShowPostModal(true)}
@@ -888,6 +943,524 @@ export function AdminDashboard() {
                                     <h4 className="text-sm font-semibold text-red-600 dark:text-red-400 mb-1">Rejection Reason</h4>
                                     <p className="text-gray-700 dark:text-gray-300">{showDetailModal.rejection_reason}</p>
                                 </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Upload Modal */}
+            {showBulkUploadModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden animate-scale-in flex flex-col">
+                        {/* Header */}
+                        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl flex items-center justify-center">
+                                    <FileSpreadsheet className="text-emerald-600 dark:text-emerald-400" size={20} />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Bulk Upload Ads</h2>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Upload multiple ads from Excel/CSV file</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowBulkUploadModal(false)}
+                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto p-6">
+                            {bulkUploadStep === 'select' && (
+                                <div className="space-y-6">
+                                    {/* Download Template Section */}
+                                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-6 border border-emerald-200 dark:border-emerald-800">
+                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                                            <Download size={18} className="text-emerald-600" />
+                                            Step 1: Download Template
+                                        </h3>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                            Download the Excel template with sample data and valid dropdown values for category, duration, and featured options.
+                                        </p>
+                                        <button
+                                            onClick={() => generateTemplate()}
+                                            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                                        >
+                                            <Download size={16} />
+                                            Download Template (.xlsx)
+                                        </button>
+                                    </div>
+
+                                    {/* Upload Section */}
+                                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 border-2 border-dashed border-gray-300 dark:border-gray-600">
+                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                                            <Upload size={18} className="text-primary-600" />
+                                            Step 2: Upload Your File
+                                        </h3>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                            Upload your filled Excel (.xlsx) or CSV file. Make sure to follow the template format.
+                                        </p>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept=".csv,.xlsx,.xls"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setBulkUploadFile(file);
+                                                    setBulkUploadLoading(true);
+                                                    try {
+                                                        const result = await parseFile(file);
+                                                        setBulkParseResult(result);
+
+                                                        // Check for duplicates against existing ads
+                                                        if (result.data.length > 0) {
+                                                            const dupResult = checkForDuplicates(result.data, ads);
+                                                            setDuplicateResult(dupResult);
+                                                        }
+
+                                                        setBulkUploadStep('preview');
+                                                    } catch (error) {
+                                                        showToast(`Error parsing file: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+                                                    } finally {
+                                                        setBulkUploadLoading(false);
+                                                    }
+                                                }
+                                            }}
+                                            className="block w-full text-sm text-gray-500 dark:text-gray-400
+                                                file:mr-4 file:py-2 file:px-4
+                                                file:rounded-lg file:border-0
+                                                file:text-sm file:font-semibold
+                                                file:bg-primary-50 file:text-primary-700
+                                                dark:file:bg-primary-900/50 dark:file:text-primary-300
+                                                hover:file:bg-primary-100 dark:hover:file:bg-primary-900
+                                                file:cursor-pointer cursor-pointer"
+                                        />
+                                        {bulkUploadLoading && (
+                                            <div className="mt-4 flex items-center gap-2 text-primary-600">
+                                                <div className="animate-spin w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full" />
+                                                Parsing file...
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Instructions */}
+                                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+                                        <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-2">Required Fields:</h4>
+                                        <ul className="text-sm text-blue-600 dark:text-blue-400 space-y-1 list-disc list-inside">
+                                            <li><strong>title</strong> - Main ad title (max 100 chars)</li>
+                                            <li><strong>subject</strong> - Ad headline (max 150 chars)</li>
+                                            <li><strong>description</strong> - Detailed description</li>
+                                            <li><strong>phone_number</strong> - 10-digit Indian mobile number</li>
+                                            <li><strong>category</strong> - jobs, rentals, sales, services, vehicles, matrimonial, or general</li>
+                                            <li><strong>city</strong> - Valid Indian city name</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* Upload History */}
+                                    {uploadHistory.length > 0 && (
+                                        <div className="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+                                            <button
+                                                onClick={() => setShowUploadHistory(!showUploadHistory)}
+                                                className="w-full px-4 py-3 flex items-center justify-between text-left"
+                                            >
+                                                <span className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                                    <History size={18} />
+                                                    Upload History ({uploadHistory.length})
+                                                </span>
+                                                {showUploadHistory ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                            </button>
+                                            {showUploadHistory && (
+                                                <div className="px-4 pb-4 space-y-2">
+                                                    {uploadHistory.map((item) => (
+                                                        <div key={item.id} className="flex items-center justify-between text-sm bg-white dark:bg-gray-800 rounded-lg px-3 py-2">
+                                                            <div>
+                                                                <span className="font-medium text-gray-900 dark:text-white">{item.fileName}</span>
+                                                                <span className="text-gray-500 ml-2">({item.totalUploaded} ads)</span>
+                                                            </div>
+                                                            <span className="text-gray-400 text-xs">
+                                                                {new Date(item.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {bulkUploadStep === 'preview' && bulkParseResult && (
+                                <div className="space-y-6">
+                                    {/* Summary */}
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+                                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{bulkParseResult.totalRows}</div>
+                                            <div className="text-sm text-gray-500">Total Rows</div>
+                                        </div>
+                                        <div className="bg-green-50 dark:bg-green-900/30 rounded-xl p-4 text-center">
+                                            <div className="text-2xl font-bold text-green-600">{duplicateResult ? duplicateResult.cleanData.length : bulkParseResult.data.length}</div>
+                                            <div className="text-sm text-green-600">Valid Ads</div>
+                                        </div>
+                                        <div className="bg-red-50 dark:bg-red-900/30 rounded-xl p-4 text-center">
+                                            <div className="text-2xl font-bold text-red-600">{bulkParseResult.errors.length}</div>
+                                            <div className="text-sm text-red-600">Errors</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Duplicate Warning */}
+                                    {duplicateResult && duplicateResult.duplicates.length > 0 && (
+                                        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
+                                            <h4 className="font-semibold text-amber-700 dark:text-amber-300 mb-2 flex items-center gap-2">
+                                                <AlertTriangle size={18} />
+                                                Duplicate Ads Found ({duplicateResult.duplicates.length})
+                                            </h4>
+                                            <p className="text-sm text-amber-600 dark:text-amber-400 mb-3">
+                                                The following ads match existing ads (same title + phone number) and will be skipped:
+                                            </p>
+                                            <div className="max-h-32 overflow-y-auto space-y-1">
+                                                {duplicateResult.duplicates.slice(0, 10).map((dup, index) => (
+                                                    <div key={index} className="text-sm text-amber-600 dark:text-amber-400 bg-white dark:bg-gray-800 rounded-lg px-3 py-2">
+                                                        <strong>Row {dup.uploadIndex}:</strong> {dup.title} ({dup.phone})
+                                                    </div>
+                                                ))}
+                                                {duplicateResult.duplicates.length > 10 && (
+                                                    <div className="text-sm text-amber-500 italic">
+                                                        ... and {duplicateResult.duplicates.length - 10} more duplicates
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Errors with Download Button */}
+                                    {bulkParseResult.errors.length > 0 && (
+                                        <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h4 className="font-semibold text-red-700 dark:text-red-300 flex items-center gap-2">
+                                                    <AlertCircle size={18} />
+                                                    Validation Errors ({bulkParseResult.errors.length})
+                                                </h4>
+                                                <button
+                                                    onClick={() => generateErrorReport(bulkParseResult.errors)}
+                                                    className="flex items-center gap-1 px-3 py-1 text-sm bg-red-100 dark:bg-red-800/50 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                                                >
+                                                    <Download size={14} />
+                                                    Download Errors
+                                                </button>
+                                            </div>
+                                            <div className="max-h-40 overflow-y-auto space-y-2">
+                                                {bulkParseResult.errors.slice(0, 20).map((error, index) => (
+                                                    <div key={index} className="text-sm text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 rounded-lg px-3 py-2">
+                                                        <strong>Row {error.row}:</strong> {error.field} - {error.message}
+                                                    </div>
+                                                ))}
+                                                {bulkParseResult.errors.length > 20 && (
+                                                    <div className="text-sm text-red-500 italic">
+                                                        ... and {bulkParseResult.errors.length - 20} more errors
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Preview Table with Inline Editing */}
+                                    {bulkParseResult.data.length > 0 && (
+                                        <div>
+                                            <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                                                Preview ({duplicateResult ? duplicateResult.cleanData.length : bulkParseResult.data.length} valid ads)
+                                                <span className="font-normal text-sm text-gray-500 ml-2">Click a row to edit</span>
+                                            </h4>
+                                            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+                                                <table className="w-full text-sm">
+                                                    <thead className="bg-gray-50 dark:bg-gray-700">
+                                                        <tr>
+                                                            <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-300">#</th>
+                                                            <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-300">Title</th>
+                                                            <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-300">Category</th>
+                                                            <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-300">City</th>
+                                                            <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-300">Phone</th>
+                                                            <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-300">Duration</th>
+                                                            <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-300">Featured</th>
+                                                            <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-300">Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                                        {(duplicateResult ? duplicateResult.cleanData : bulkParseResult.data).slice(0, 10).map((ad, index) => (
+                                                            <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                                                <td className="py-2 px-3 text-gray-500">{index + 1}</td>
+                                                                {editingRowIndex === index ? (
+                                                                    <>
+                                                                        <td className="py-2 px-3">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editedRowData?.title || ''}
+                                                                                onChange={(e) => setEditedRowData(prev => prev ? { ...prev, title: e.target.value } : null)}
+                                                                                className="w-full px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
+                                                                            />
+                                                                        </td>
+                                                                        <td className="py-2 px-3">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editedRowData?.category || ''}
+                                                                                onChange={(e) => setEditedRowData(prev => prev ? { ...prev, category: e.target.value } : null)}
+                                                                                className="w-20 px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
+                                                                            />
+                                                                        </td>
+                                                                        <td className="py-2 px-3">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editedRowData?.city || ''}
+                                                                                onChange={(e) => setEditedRowData(prev => prev ? { ...prev, city: e.target.value } : null)}
+                                                                                className="w-24 px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
+                                                                            />
+                                                                        </td>
+                                                                        <td className="py-2 px-3">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editedRowData?.phone_number || ''}
+                                                                                onChange={(e) => setEditedRowData(prev => prev ? { ...prev, phone_number: e.target.value } : null)}
+                                                                                className="w-28 px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
+                                                                            />
+                                                                        </td>
+                                                                        <td className="py-2 px-3">
+                                                                            <input
+                                                                                type="number"
+                                                                                value={editedRowData?.duration_days || 30}
+                                                                                onChange={(e) => setEditedRowData(prev => prev ? { ...prev, duration_days: parseInt(e.target.value) } : null)}
+                                                                                className="w-16 px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
+                                                                            />
+                                                                        </td>
+                                                                        <td className="py-2 px-3">
+                                                                            <select
+                                                                                value={editedRowData?.is_featured ? 'yes' : 'no'}
+                                                                                onChange={(e) => setEditedRowData(prev => prev ? { ...prev, is_featured: e.target.value === 'yes' } : null)}
+                                                                                className="px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
+                                                                            >
+                                                                                <option value="no">No</option>
+                                                                                <option value="yes">Yes</option>
+                                                                            </select>
+                                                                        </td>
+                                                                        <td className="py-2 px-3">
+                                                                            <div className="flex gap-1">
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        if (editedRowData && duplicateResult) {
+                                                                                            const newData = [...duplicateResult.cleanData];
+                                                                                            newData[index] = editedRowData;
+                                                                                            setDuplicateResult({ ...duplicateResult, cleanData: newData });
+                                                                                        } else if (editedRowData && bulkParseResult) {
+                                                                                            const newData = [...bulkParseResult.data];
+                                                                                            newData[index] = editedRowData;
+                                                                                            setBulkParseResult({ ...bulkParseResult, data: newData });
+                                                                                        }
+                                                                                        setEditingRowIndex(null);
+                                                                                        setEditedRowData(null);
+                                                                                    }}
+                                                                                    className="p-1 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/50 rounded"
+                                                                                    title="Save"
+                                                                                >
+                                                                                    <Save size={16} />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setEditingRowIndex(null);
+                                                                                        setEditedRowData(null);
+                                                                                    }}
+                                                                                    className="p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                                                                    title="Cancel"
+                                                                                >
+                                                                                    <X size={16} />
+                                                                                </button>
+                                                                            </div>
+                                                                        </td>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <td className="py-2 px-3 text-gray-900 dark:text-white font-medium truncate max-w-[200px]">{ad.title}</td>
+                                                                        <td className="py-2 px-3 text-gray-600 dark:text-gray-400 capitalize">{ad.category}</td>
+                                                                        <td className="py-2 px-3 text-gray-600 dark:text-gray-400">{ad.city}</td>
+                                                                        <td className="py-2 px-3 text-gray-600 dark:text-gray-400">{ad.phone_number}</td>
+                                                                        <td className="py-2 px-3 text-gray-600 dark:text-gray-400">{ad.duration_days} days</td>
+                                                                        <td className="py-2 px-3">
+                                                                            {ad.is_featured ? (
+                                                                                <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs">Yes</span>
+                                                                            ) : (
+                                                                                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs">No</span>
+                                                                            )}
+                                                                        </td>
+                                                                        <td className="py-2 px-3">
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    setEditingRowIndex(index);
+                                                                                    setEditedRowData({ ...ad });
+                                                                                }}
+                                                                                className="p-1 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded"
+                                                                                title="Edit"
+                                                                            >
+                                                                                <Pencil size={16} />
+                                                                            </button>
+                                                                        </td>
+                                                                    </>
+                                                                )}
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                                {(duplicateResult ? duplicateResult.cleanData : bulkParseResult.data).length > 10 && (
+                                                    <div className="py-2 px-3 bg-gray-50 dark:bg-gray-900 text-sm text-gray-500 text-center">
+                                                        ... and {(duplicateResult ? duplicateResult.cleanData : bulkParseResult.data).length - 10} more ads
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {bulkUploadStep === 'uploading' && (
+                                <div className="flex flex-col items-center justify-center py-12">
+                                    <div className="w-full max-w-md mb-6">
+                                        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                            <span>Uploading ads...</span>
+                                            <span>{uploadProgress}%</span>
+                                        </div>
+                                        <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 ease-out"
+                                                style={{ width: `${uploadProgress}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <p className="text-lg font-medium text-gray-900 dark:text-white">Please wait...</p>
+                                    <p className="text-sm text-gray-500">Creating {duplicateResult ? duplicateResult.cleanData.length : bulkParseResult?.data.length} ads</p>
+                                </div>
+                            )}
+
+                            {bulkUploadStep === 'done' && (
+                                <div className="flex flex-col items-center justify-center py-12">
+                                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center mb-4">
+                                        <CheckCircle className="text-green-600" size={32} />
+                                    </div>
+                                    <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">Upload Complete!</p>
+                                    <p className="text-sm text-gray-500">{duplicateResult ? duplicateResult.cleanData.length : bulkParseResult?.data.length} ads have been successfully created</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="border-t border-gray-100 dark:border-gray-700 px-6 py-4 flex items-center justify-between bg-gray-50 dark:bg-gray-900">
+                            <button
+                                onClick={() => {
+                                    if (bulkUploadStep === 'preview') {
+                                        setBulkUploadStep('select');
+                                        setBulkParseResult(null);
+                                        setBulkUploadFile(null);
+                                        setDuplicateResult(null);
+                                        setEditingRowIndex(null);
+                                        setEditedRowData(null);
+                                        // Reset file input
+                                        if (fileInputRef.current) {
+                                            fileInputRef.current.value = '';
+                                        }
+                                    } else {
+                                        setShowBulkUploadModal(false);
+                                    }
+                                }}
+                                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                {bulkUploadStep === 'preview' ? 'Back' : 'Cancel'}
+                            </button>
+
+                            {bulkUploadStep === 'preview' && bulkParseResult && (duplicateResult ? duplicateResult.cleanData.length : bulkParseResult.data.length) > 0 && (
+                                <button
+                                    onClick={async () => {
+                                        const dataToUpload = duplicateResult ? duplicateResult.cleanData : bulkParseResult.data;
+                                        const uploadCount = dataToUpload.length;
+
+                                        // Show confirmation for large batches (100+)
+                                        if (uploadCount >= 100) {
+                                            const confirmed = window.confirm(
+                                                `You are about to upload ${uploadCount} ads. This may take a few minutes. Continue?`
+                                            );
+                                            if (!confirmed) return;
+                                        }
+
+                                        setBulkUploadStep('uploading');
+                                        setUploadProgress(0);
+
+                                        try {
+                                            const adsToCreate = convertToAds(dataToUpload);
+                                            const { data: { user } } = await supabase.auth.getUser();
+
+                                            // Create ads with proper user_id
+                                            const newAds = adsToCreate.map(ad => ({
+                                                ...ad,
+                                                id: crypto.randomUUID(),
+                                                user_id: user?.id || 'admin',
+                                            }));
+
+                                            // Save to localStorage first
+                                            try {
+                                                const stored = localStorage.getItem('adexpress360_ads_local');
+                                                const localAds = stored ? JSON.parse(stored) : [];
+                                                localStorage.setItem('adexpress360_ads_local', JSON.stringify([...newAds, ...localAds]));
+                                            } catch (e) {
+                                                console.log('Local save error:', e);
+                                            }
+
+                                            setUploadProgress(30);
+
+                                            // Batch Supabase insert (groups of 50 for efficiency)
+                                            try {
+                                                const batchSize = 50;
+                                                const batches = [];
+                                                for (let i = 0; i < newAds.length; i += batchSize) {
+                                                    batches.push(newAds.slice(i, i + batchSize));
+                                                }
+
+                                                for (let i = 0; i < batches.length; i++) {
+                                                    const batch = batches[i];
+                                                    // Use upsert or regular insert for the batch
+                                                    await supabase.from('ads').insert(batch);
+                                                    // Update progress (30-90% range for batch inserts)
+                                                    const progress = 30 + Math.round(((i + 1) / batches.length) * 60);
+                                                    setUploadProgress(progress);
+                                                }
+                                            } catch (e) {
+                                                console.log('Supabase batch insert skipped:', e);
+                                            }
+
+                                            setUploadProgress(100);
+
+                                            // Save to upload history
+                                            saveUploadToHistory(bulkUploadFile?.name || 'Unknown file', newAds.length);
+
+                                            setBulkUploadStep('done');
+                                            showToast(`Successfully uploaded ${newAds.length} ads!`, 'success');
+                                            fetchData();
+                                        } catch (error) {
+                                            showToast(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+                                            setBulkUploadStep('preview');
+                                        }
+                                    }}
+                                    className="flex items-center gap-2 px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium"
+                                >
+                                    <Upload size={18} />
+                                    Upload {duplicateResult ? duplicateResult.cleanData.length : bulkParseResult.data.length} Ads
+                                </button>
+                            )}
+
+                            {bulkUploadStep === 'done' && (
+                                <button
+                                    onClick={() => setShowBulkUploadModal(false)}
+                                    className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
+                                >
+                                    Close
+                                </button>
                             )}
                         </div>
                     </div>
