@@ -85,8 +85,8 @@ export function Footer() {
                 <div className="container-app py-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-gray-500">
                     <p>© {currentYear} adexpress360. All rights reserved.</p>
                     <div className="flex gap-6">
-                        <button className="hover:text-gray-300 transition-colors">Privacy</button>
-                        <button className="hover:text-gray-300 transition-colors">Terms</button>
+                        <Link to="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</Link>
+                        <Link to="/terms" className="hover:text-gray-300 transition-colors">Terms & Conditions</Link>
                     </div>
                 </div>
             </div>

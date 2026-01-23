@@ -15,6 +15,8 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { NotFound } from './pages/NotFound';
 import { BrowseAds } from './pages/BrowseAds';
 import { AdDetail } from './pages/AdDetail';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsConditions } from './pages/TermsConditions';
 
 function App() {
     return (
@@ -34,6 +36,8 @@ function App() {
                                 <Route path="/category/:categoryId" element={<Category />} />
                                 <Route path="/admin" element={<AdminLogin />} />
                                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                                <Route path="/privacy" element={<PrivacyPolicy />} />
+                                <Route path="/terms" element={<TermsConditions />} />
                                 <Route path="*" element={<NotFound />} />
                             </Routes>
                         </ToastProvider>
