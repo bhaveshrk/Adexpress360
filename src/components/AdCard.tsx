@@ -68,7 +68,7 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
 
     const handleShare = async () => {
         setIsSharing(true);
-        const url = `${window.location.origin}?ad=${ad.id}`;
+        const url = `${window.location.origin}/ad/${ad.id}`;
         const success = await shareAd(displayTitle, url);
         if (success) {
             showToast('Link copied to clipboard!', 'success');

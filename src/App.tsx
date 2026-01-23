@@ -14,6 +14,7 @@ import { AdminLogin } from './pages/AdminLogin';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { NotFound } from './pages/NotFound';
 import { BrowseAds } from './pages/BrowseAds';
+import { AdDetail } from './pages/AdDetail';
 
 function App() {
     return (
@@ -25,6 +26,7 @@ function App() {
                             <Routes>
                                 <Route path="/" element={<Index />} />
                                 <Route path="/browse" element={<BrowseAds />} />
+                                <Route path="/ad/:id" element={<AdDetail />} />
                                 <Route path="/auth" element={<Auth />} />
                                 <Route path="/post-ad" element={<PostAd />} />
                                 <Route path="/dashboard" element={<Dashboard />} />
