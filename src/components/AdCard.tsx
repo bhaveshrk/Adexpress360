@@ -305,7 +305,7 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
                                             className="btn-primary w-full"
                                         >
                                             <Phone size={18} />
-                                            Call: +91 {ad.phone_number}
+                                            Call Now
                                         </button>
 
                                         <button
