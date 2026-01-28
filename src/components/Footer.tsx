@@ -20,7 +20,7 @@ export function Footer() {
                             </span>
                         </Link>
                         <p className="text-sm text-gray-400 leading-relaxed">
-                            Your trusted classifieds platform. Post and discover opportunities across India.
+                            India's one-stop classifieds platform for jobs, rentals, services, matrimony & more.
                         </p>
                     </div>
 

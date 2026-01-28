@@ -434,7 +434,7 @@ export function Dashboard() {
                                     <Plus className="text-gray-400" size={24} />
                                 </div>
                                 <h3 className="text-lg font-semibold text-gray-900 mb-2">No ads yet</h3>
-                                <p className="text-gray-500 mb-6">Start posting to reach customers</p>
+                                <p className="text-gray-500 mb-6">Start posting to reach the right audience</p>
                                 <Link to="/post-ad" className="btn-primary">Post Your First Ad</Link>
                             </div>
                         )}

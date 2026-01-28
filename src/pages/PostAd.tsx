@@ -115,7 +115,7 @@ export function PostAd() {
                         <ArrowLeft size={18} /> Back
                     </Link>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Post Your Ad</h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">Reach millions of customers across India</p>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">Reach the right audience across India</p>
                 </div>
             </div>
 

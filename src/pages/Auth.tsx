@@ -316,7 +316,7 @@ export function Auth() {
                                     {isSignUp ? 'Create Account' : 'Welcome Back'}
                                 </h1>
                                 <p className="text-gray-500 dark:text-gray-400 mt-1">
-                                    {isSignUp ? 'Sign up to start posting ads' : 'Sign in to your account'}
+                                    {isSignUp ? 'Sign up to get started' : 'Sign in to your account'}
                                 </p>
                             </>
                         )}
