@@ -95,5 +95,5 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 --   'ADMIN_PHONE_NUMBER',
 --   'Admin',
 --   true,
---   'admin@adexpress360.com'
+--   'admin@findads.com'
 -- );

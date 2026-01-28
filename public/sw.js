@@ -1,5 +1,5 @@
-// Service Worker for adexpress360 PWA
-const CACHE_NAME = 'adexpress360-v1';
+// Service Worker for FindAds PWA
+const CACHE_NAME = 'findads-v1';
 const OFFLINE_URL = '/';
 
 // Files to cache for offline use

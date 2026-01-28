@@ -1,4 +1,4 @@
--- Supabase SQL Schema for adexpress360
+-- Supabase SQL Schema for FindAds
 -- Run this in the Supabase SQL Editor
 
 -- Enable UUID extension

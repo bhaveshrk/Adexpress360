@@ -1,6 +1,6 @@
 {
-    "name": "adexpress360",
-    "short_name": "AdExpress",
+    "name": "FindAds",
+    "short_name": "FindAds",
     "description": "Free classifieds for jobs, rentals, sales, services, and more across India",
     "start_url": "/",
     "display": "standalone",

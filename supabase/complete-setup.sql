@@ -1,5 +1,5 @@
 -- ===============================================
--- COMPLETE SUPABASE SETUP FOR ADEXPRESS360
+-- COMPLETE SUPABASE SETUP FOR FINDADS
 -- Run this entire file in Supabase SQL Editor
 -- ===============================================
 
