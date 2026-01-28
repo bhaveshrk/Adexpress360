@@ -39,6 +39,9 @@ export function AdminDashboard() {
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [showPostModal, setShowPostModal] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState<Ad | null>(null);
+    const [showEditModal, setShowEditModal] = useState<Ad | null>(null);
+    const [showRenewModal, setShowRenewModal] = useState<Ad | null>(null);
+    const [renewDays, setRenewDays] = useState(30);
 
     // Bulk upload state
     const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
@@ -273,6 +276,83 @@ export function AdminDashboard() {
 
         showToast('Ad deleted', 'success');
         fetchData();
+    };
+
+    const handleRenew = async (ad: Ad, days: number) => {
+        const now = new Date();
+        const newExpiry = new Date(now.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
+
+        const renewedAd = {
+            ...ad,
+            expires_at: newExpiry,
+            is_active: true,
+            approval_status: 'approved' as const,
+        };
+
+        // Optimistic update
+        setAds(prev => prev.map(a => a.id === ad.id ? renewedAd : a));
+
+        // Update localStorage
+        try {
+            const stored = localStorage.getItem('findads_ads_local');
+            const localAds: Ad[] = stored ? JSON.parse(stored) : [];
+            const existingIndex = localAds.findIndex(a => a.id === ad.id);
+            if (existingIndex >= 0) {
+                localAds[existingIndex] = renewedAd;
+            } else {
+                localAds.unshift(renewedAd);
+            }
+            localStorage.setItem('findads_ads_local', JSON.stringify(localAds));
+        } catch (e) {
+            console.log('Local update error:', e);
+        }
+
+        // Also try Supabase
+        try {
+            await supabase.from('ads').update({
+                expires_at: newExpiry,
+                is_active: true,
+                approval_status: 'approved',
+            }).eq('id', ad.id);
+        } catch (e) {
+            console.log('Supabase update skipped:', e);
+        }
+
+        showToast(`Ad renewed for ${days} days!`, 'success');
+        setShowRenewModal(null);
+        setRenewDays(30);
+    };
+
+    const handleEditAd = async (ad: Ad, updates: Partial<Ad>) => {
+        const updatedAd = { ...ad, ...updates };
+
+        // Optimistic update
+        setAds(prev => prev.map(a => a.id === ad.id ? updatedAd : a));
+
+        // Update localStorage
+        try {
+            const stored = localStorage.getItem('findads_ads_local');
+            const localAds: Ad[] = stored ? JSON.parse(stored) : [];
+            const existingIndex = localAds.findIndex(a => a.id === ad.id);
+            if (existingIndex >= 0) {
+                localAds[existingIndex] = updatedAd;
+            } else {
+                localAds.unshift(updatedAd);
+            }
+            localStorage.setItem('findads_ads_local', JSON.stringify(localAds));
+        } catch (e) {
+            console.log('Local update error:', e);
+        }
+
+        // Also try Supabase
+        try {
+            await supabase.from('ads').update(updates).eq('id', ad.id);
+        } catch (e) {
+            console.log('Supabase update skipped:', e);
+        }
+
+        showToast('Ad updated successfully!', 'success');
+        setShowEditModal(null);
     };
 
     const handleSignOut = async () => {
@@ -606,6 +686,20 @@ export function AdminDashboard() {
                                                     >
                                                         <Eye size={18} />
                                                     </button>
+                                                    <button
+                                                        onClick={() => setShowEditModal(ad)}
+                                                        className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/50 rounded-lg"
+                                                        title="Edit Ad"
+                                                    >
+                                                        <Edit size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setShowRenewModal(ad)}
+                                                        className="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/50 rounded-lg"
+                                                        title="Renew Ad"
+                                                    >
+                                                        <RefreshCw size={18} />
+                                                    </button>
                                                     {ad.approval_status === 'pending' && (
                                                         <>
                                                             <button
@@ -663,24 +757,36 @@ export function AdminDashboard() {
                                         <span className="flex items-center gap-1"><Eye size={10} /> {ad.views_count}</span>
                                         <span className="flex items-center gap-1"><Phone size={10} /> {ad.calls_count}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 mt-3">
+                                    <div className="flex items-center gap-2 mt-3 flex-wrap">
                                         <button
                                             onClick={() => setShowDetailModal(ad)}
-                                            className="flex-1 py-2 px-3 bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium"
+                                            className="py-2 px-3 bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium"
                                         >
-                                            View Details
+                                            View
+                                        </button>
+                                        <button
+                                            onClick={() => setShowEditModal(ad)}
+                                            className="py-2 px-3 bg-purple-50 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-lg text-sm font-medium"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => setShowRenewModal(ad)}
+                                            className="py-2 px-3 bg-orange-50 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400 rounded-lg text-sm font-medium"
+                                        >
+                                            Renew
                                         </button>
                                         {ad.approval_status === 'pending' && (
                                             <>
                                                 <button
                                                     onClick={() => handleApprove(ad)}
-                                                    className="flex-1 py-2 px-3 bg-green-50 dark:bg-green-900/50 text-green-600 dark:text-green-400 rounded-lg text-sm font-medium"
+                                                    className="py-2 px-3 bg-green-50 dark:bg-green-900/50 text-green-600 dark:text-green-400 rounded-lg text-sm font-medium"
                                                 >
                                                     Approve
                                                 </button>
                                                 <button
                                                     onClick={() => { setSelectedAd(ad); setShowRejectModal(true); }}
-                                                    className="flex-1 py-2 px-3 bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium"
+                                                    className="py-2 px-3 bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium"
                                                 >
                                                     Reject
                                                 </button>
@@ -735,6 +841,174 @@ export function AdminDashboard() {
                     </div>
                 )
             }
+
+            {/* Renew Ad Modal */}
+            {showRenewModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+                            <RefreshCw className="text-orange-500" size={20} />
+                            Renew Ad
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+                            Renewing: <strong className="text-gray-900 dark:text-white">{showRenewModal.title}</strong>
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                            Current Expiry: {new Date(showRenewModal.expires_at).toLocaleDateString()}
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Extend By (Days)
+                            </label>
+                            <select
+                                value={renewDays}
+                                onChange={(e) => setRenewDays(parseInt(e.target.value))}
+                                className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
+                            >
+                                <option value={7}>7 days</option>
+                                <option value={15}>15 days</option>
+                                <option value={30}>30 days</option>
+                                <option value={60}>60 days</option>
+                                <option value={90}>90 days</option>
+                            </select>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => { setShowRenewModal(null); setRenewDays(30); }}
+                                className="flex-1 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => handleRenew(showRenewModal, renewDays)}
+                                className="flex-1 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors"
+                            >
+                                Renew for {renewDays} days
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Ad Modal */}
+            {showEditModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <Edit className="text-purple-500" size={20} />
+                                Edit Ad
+                            </h3>
+                            <button
+                                onClick={() => setShowEditModal(null)}
+                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const formData = new FormData(e.currentTarget);
+                            handleEditAd(showEditModal, {
+                                title: String(formData.get('title') || ''),
+                                subject: String(formData.get('subject') || ''),
+                                description: String(formData.get('description') || ''),
+                                phone_number: String(formData.get('phone') || ''),
+                                category: String(formData.get('category') || '') as Ad['category'],
+                                city: String(formData.get('city') || ''),
+                            });
+                        }} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                                <input
+                                    name="title"
+                                    type="text"
+                                    defaultValue={showEditModal.title}
+                                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject</label>
+                                <input
+                                    name="subject"
+                                    type="text"
+                                    defaultValue={showEditModal.subject}
+                                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                                <textarea
+                                    name="description"
+                                    defaultValue={showEditModal.description}
+                                    rows={4}
+                                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all resize-none"
+                                    required
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
+                                    <input
+                                        name="phone"
+                                        type="tel"
+                                        defaultValue={showEditModal.phone_number}
+                                        className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                                    <select
+                                        name="category"
+                                        defaultValue={showEditModal.category}
+                                        className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                                        required
+                                    >
+                                        {CATEGORIES.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.icon} {cat.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
+                                <select
+                                    name="city"
+                                    defaultValue={showEditModal.city}
+                                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                                    required
+                                >
+                                    {Object.entries(CITIES_BY_STATE).map(([state, cities]) => (
+                                        <optgroup key={state} label={state}>
+                                            {cities.map(city => (
+                                                <option key={city} value={city}>{city}</option>
+                                            ))}
+                                        </optgroup>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditModal(null)}
+                                    className="flex-1 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Save size={18} /> Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Post Ad Modal (simplified) */}
             {
