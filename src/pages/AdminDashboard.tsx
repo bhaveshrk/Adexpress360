@@ -7,7 +7,8 @@ import {
     Shield, LogOut, Search, CheckCircle, XCircle, Clock, Eye,
     TrendingUp, Users, FileText, Plus, Edit, Trash2, MapPin,
     Phone, ChevronDown, ChevronUp, RefreshCw, X, BarChart3, PieChartIcon,
-    Upload, Download, AlertCircle, FileSpreadsheet, History, AlertTriangle, Save, Pencil
+    Upload, Download, AlertCircle, FileSpreadsheet, History, AlertTriangle, Save, Pencil,
+    Filter, ArrowUpDown, Calendar, SlidersHorizontal
 } from 'lucide-react';
 import {
     BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
@@ -43,6 +44,10 @@ export function AdminDashboard() {
     const [showRenewModal, setShowRenewModal] = useState<Ad | null>(null);
     const [renewDays, setRenewDays] = useState(30);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [selectedCity, setSelectedCity] = useState<string>('all');
+    const [sortConfig, setSortConfig] = useState<{ key: keyof Ad | 'created_at' | 'views_count' | 'calls_count' | 'expires_at', direction: 'asc' | 'desc' }>({ key: 'created_at', direction: 'desc' });
 
     // Bulk upload state
     const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
@@ -361,32 +366,74 @@ export function AdminDashboard() {
         navigate('/admin');
     };
 
-    const filteredAds = ads.filter(ad => {
-        // First filter by tab
-        if (activeTab !== 'all' && ad.approval_status !== activeTab) {
-            return false;
-        }
+    const allCities = useMemo(() => {
+        // Get all unique cities from current ads and defined cities
+        const defined = Object.values(CITIES_BY_STATE).flat();
+        const fromAds = ads.map(a => a.city).filter(Boolean);
+        return Array.from(new Set([...defined, ...fromAds])).sort();
+    }, [ads]);
 
-        // Then filter by search query
-        if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase().trim();
-            const categoryLabel = CATEGORIES.find(c => c.id === ad.category)?.label || '';
+    const filteredAds = useMemo(() => {
+        let result = ads.filter(ad => {
+            // 1. Filter by Tab
+            if (activeTab !== 'all' && ad.approval_status !== activeTab) {
+                return false;
+            }
 
-            return (
-                ad.title?.toLowerCase().includes(query) ||
-                ad.subject?.toLowerCase().includes(query) ||
-                ad.description?.toLowerCase().includes(query) ||
-                ad.phone_number?.toLowerCase().includes(query) ||
-                ad.city?.toLowerCase().includes(query) ||
-                ad.category?.toLowerCase().includes(query) ||
-                categoryLabel.toLowerCase().includes(query) ||
-                ad.location?.toLowerCase().includes(query) ||
-                ad.id?.toLowerCase().includes(query)
-            );
-        }
+            // 2. Filter by Search Query
+            if (searchQuery.trim()) {
+                const query = searchQuery.toLowerCase().trim();
+                const categoryLabel = CATEGORIES.find(c => c.id === ad.category)?.label || '';
 
-        return true;
-    });
+                const matchesSearch = (
+                    ad.title?.toLowerCase().includes(query) ||
+                    ad.subject?.toLowerCase().includes(query) ||
+                    ad.description?.toLowerCase().includes(query) ||
+                    ad.phone_number?.toLowerCase().includes(query) ||
+                    ad.city?.toLowerCase().includes(query) ||
+                    ad.category?.toLowerCase().includes(query) ||
+                    categoryLabel.toLowerCase().includes(query) ||
+                    ad.location?.toLowerCase().includes(query) ||
+                    ad.id?.toLowerCase().includes(query)
+                );
+
+                if (!matchesSearch) return false;
+            }
+
+            // 3. Filter by Category
+            if (selectedCategory !== 'all' && ad.category !== selectedCategory) {
+                return false;
+            }
+
+            // 4. Filter by City
+            if (selectedCity !== 'all' && ad.city !== selectedCity) {
+                return false;
+            }
+
+            return true;
+        });
+
+        // 5. Apply Sorting
+        return result.sort((a, b) => {
+            const { key, direction } = sortConfig;
+            let valueA: any = a[key as keyof Ad];
+            let valueB: any = b[key as keyof Ad];
+
+            // Handle date strings
+            if (key === 'created_at' || key === 'expires_at' || key === 'approved_at') {
+                valueA = new Date(valueA || 0).getTime();
+                valueB = new Date(valueB || 0).getTime();
+            }
+
+            // Handle undefined/nulls (push to bottom)
+            if (valueA === undefined || valueA === null) return 1;
+            if (valueB === undefined || valueB === null) return -1;
+            if (valueA === valueB) return 0;
+
+            const comparison = valueA < valueB ? -1 : 1;
+            return direction === 'asc' ? comparison : -comparison;
+        });
+    }, [ads, activeTab, searchQuery, selectedCategory, selectedCity, sortConfig]);
 
     // Analytics Data
     const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF6B6B'];
@@ -612,6 +659,94 @@ export function AdminDashboard() {
                         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                             Found <strong className="text-gray-900 dark:text-white">{filteredAds.length}</strong> ads matching "{searchQuery}"
                         </p>
+                    )}
+                </div>
+
+                {/* Filters & Sorting Toolbar */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm mb-6 border border-gray-100 dark:border-gray-700">
+                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+
+                        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors whitespace-nowrap ${showFilters || selectedCategory !== 'all' || selectedCity !== 'all'
+                                        ? 'bg-primary-50 border-primary-200 text-primary-700 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-300'
+                                        : 'bg-white border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'
+                                    }`}
+                            >
+                                <Filter size={16} /> Filters
+                                {(selectedCategory !== 'all' || selectedCity !== 'all') && (
+                                    <span className="ml-1 w-2 h-2 rounded-full bg-primary-500"></span>
+                                )}
+                            </button>
+
+                            {/* Sort Dropdown */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline">Sort by:</span>
+                                <select
+                                    value={`${sortConfig.key}-${sortConfig.direction}`}
+                                    onChange={(e) => {
+                                        const [key, direction] = e.target.value.split('-');
+                                        setSortConfig({ key: key as any, direction: direction as 'asc' | 'desc' });
+                                    }}
+                                    className="px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                >
+                                    <option value="created_at-desc">Newest First</option>
+                                    <option value="created_at-asc">Oldest First</option>
+                                    <option value="views_count-desc">Most Viewed</option>
+                                    <option value="calls_count-desc">Most Calls</option>
+                                    <option value="expires_at-asc">Expiring Soon</option>
+                                    <option value="expires_at-desc">Expiring Later</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Active Filters Summary / Clear Button */}
+                        {(selectedCategory !== 'all' || selectedCity !== 'all' || searchQuery) && (
+                            <button
+                                onClick={() => {
+                                    setSelectedCategory('all');
+                                    setSelectedCity('all');
+                                    setSearchQuery('');
+                                    setSortConfig({ key: 'created_at', direction: 'desc' });
+                                }}
+                                className="text-sm text-red-500 hover:text-red-600 dark:text-red-400 font-medium flex items-center gap-1"
+                            >
+                                <X size={14} /> Clear All
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Filter Panel (Expandable) */}
+                    {(showFilters || selectedCategory !== 'all' || selectedCity !== 'all') && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 animate-fade-in">
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Category</label>
+                                <select
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                >
+                                    <option value="all">All Categories</option>
+                                    {CATEGORIES.map(cat => (
+                                        <option key={cat.id} value={cat.id}>{cat.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">City</label>
+                                <select
+                                    value={selectedCity}
+                                    onChange={(e) => setSelectedCity(e.target.value)}
+                                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                >
+                                    <option value="all">All Cities</option>
+                                    {allCities.map(city => (
+                                        <option key={city} value={city}>{city}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                     )}
                 </div>
 
