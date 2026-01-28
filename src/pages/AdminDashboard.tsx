@@ -42,6 +42,7 @@ export function AdminDashboard() {
     const [showEditModal, setShowEditModal] = useState<Ad | null>(null);
     const [showRenewModal, setShowRenewModal] = useState<Ad | null>(null);
     const [renewDays, setRenewDays] = useState(30);
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Bulk upload state
     const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
@@ -361,8 +362,30 @@ export function AdminDashboard() {
     };
 
     const filteredAds = ads.filter(ad => {
-        if (activeTab === 'all') return true;
-        return ad.approval_status === activeTab;
+        // First filter by tab
+        if (activeTab !== 'all' && ad.approval_status !== activeTab) {
+            return false;
+        }
+
+        // Then filter by search query
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase().trim();
+            const categoryLabel = CATEGORIES.find(c => c.id === ad.category)?.label || '';
+
+            return (
+                ad.title?.toLowerCase().includes(query) ||
+                ad.subject?.toLowerCase().includes(query) ||
+                ad.description?.toLowerCase().includes(query) ||
+                ad.phone_number?.toLowerCase().includes(query) ||
+                ad.city?.toLowerCase().includes(query) ||
+                ad.category?.toLowerCase().includes(query) ||
+                categoryLabel.toLowerCase().includes(query) ||
+                ad.location?.toLowerCase().includes(query) ||
+                ad.id?.toLowerCase().includes(query)
+            );
+        }
+
+        return true;
     });
 
     // Analytics Data
@@ -563,6 +586,33 @@ export function AdminDashboard() {
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Search Bar */}
+                <div className="mb-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search by phone, title, category, city, description..."
+                            className="w-full pl-10 pr-10 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                            >
+                                <X size={18} />
+                            </button>
+                        )}
+                    </div>
+                    {searchQuery && (
+                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            Found <strong className="text-gray-900 dark:text-white">{filteredAds.length}</strong> ads matching "{searchQuery}"
+                        </p>
+                    )}
                 </div>
 
                 {/* Actions */}
