@@ -12,7 +12,7 @@ import { AnalyticsChart } from '../components/AnalyticsChart';
 import { ArrowLeft, Plus, Eye, Phone, TrendingUp, Clock, Bookmark, RefreshCw, Settings, AlertCircle, CheckCircle, XCircle, CheckSquare, Timer, BarChart2, X, Search } from 'lucide-react';
 
 // Get saved ads from localStorage
-const SAVED_ADS_KEY = 'adexpress360_saved_ads';
+const SAVED_ADS_KEY = 'findads_saved_ads';
 const getSavedAds = (): string[] => {
     try {
         const saved = localStorage.getItem(SAVED_ADS_KEY);

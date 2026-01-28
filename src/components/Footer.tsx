@@ -72,7 +72,7 @@ export function Footer() {
                     <div>
                         <h4 className="font-semibold text-white mb-4">Contact</h4>
                         <ul className="space-y-2 text-sm text-gray-400">
-                            <li>support@adexpress360.in</li>
+                            <li>support@findads.in</li>
                             <li>+91 1800-XXX-XXXX</li>
                             <li>Mumbai, India</li>
                         </ul>
@@ -83,7 +83,7 @@ export function Footer() {
             {/* Bottom bar */}
             <div className="border-t border-gray-800">
                 <div className="container-app py-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-gray-500">
-                    <p>© {currentYear} adexpress360. All rights reserved.</p>
+                    <p>© {currentYear} FindAds. All rights reserved.</p>
                     <div className="flex gap-6">
                         <Link to="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</Link>
                         <Link to="/terms" className="hover:text-gray-300 transition-colors">Terms & Conditions</Link>

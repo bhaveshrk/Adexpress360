@@ -109,7 +109,7 @@ export function AdminDashboard() {
             // Also get local ads
             let localAds: Ad[] = [];
             try {
-                const stored = localStorage.getItem('adexpress360_ads_local');
+                const stored = localStorage.getItem('findads_ads_local');
                 if (stored) localAds = JSON.parse(stored);
             } catch (e) {
                 console.log('Local storage error:', e);
@@ -182,7 +182,7 @@ export function AdminDashboard() {
 
         // Update in localStorage - add or update the ad
         try {
-            const stored = localStorage.getItem('adexpress360_ads_local');
+            const stored = localStorage.getItem('findads_ads_local');
             const localAds: Ad[] = stored ? JSON.parse(stored) : [];
             const existingIndex = localAds.findIndex(a => a.id === ad.id);
             if (existingIndex >= 0) {
@@ -190,7 +190,7 @@ export function AdminDashboard() {
             } else {
                 localAds.unshift(approvedAd);
             }
-            localStorage.setItem('adexpress360_ads_local', JSON.stringify(localAds));
+            localStorage.setItem('findads_ads_local', JSON.stringify(localAds));
         } catch (e) {
             console.log('Local update error:', e);
         }
@@ -214,7 +214,7 @@ export function AdminDashboard() {
 
         // Update in localStorage
         try {
-            const stored = localStorage.getItem('adexpress360_ads_local');
+            const stored = localStorage.getItem('findads_ads_local');
             if (stored) {
                 const localAds = JSON.parse(stored);
                 const updatedAds = localAds.map((a: Ad) =>
@@ -225,7 +225,7 @@ export function AdminDashboard() {
                         approved_at: new Date().toISOString()
                     } : a
                 );
-                localStorage.setItem('adexpress360_ads_local', JSON.stringify(updatedAds));
+                localStorage.setItem('findads_ads_local', JSON.stringify(updatedAds));
             }
         } catch (e) {
             console.log('Local update error:', e);
@@ -254,11 +254,11 @@ export function AdminDashboard() {
 
         // Delete from localStorage
         try {
-            const stored = localStorage.getItem('adexpress360_ads_local');
+            const stored = localStorage.getItem('findads_ads_local');
             if (stored) {
                 const localAds = JSON.parse(stored);
                 const filteredAds = localAds.filter((a: Ad) => a.id !== ad.id);
-                localStorage.setItem('adexpress360_ads_local', JSON.stringify(filteredAds));
+                localStorage.setItem('findads_ads_local', JSON.stringify(filteredAds));
             }
         } catch (e) {
             console.log('Local delete error:', e);
@@ -342,7 +342,7 @@ export function AdminDashboard() {
                         <Shield className="text-primary-400" size={24} />
                         <div>
                             <h1 className="font-bold text-lg">Admin Dashboard</h1>
-                            <p className="text-gray-400 text-xs">adexpress360</p>
+                            <p className="text-gray-400 text-xs">FindAds</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -780,10 +780,10 @@ export function AdminDashboard() {
 
                                 // Save to localStorage
                                 try {
-                                    const stored = localStorage.getItem('adexpress360_ads_local');
+                                    const stored = localStorage.getItem('findads_ads_local');
                                     const localAds = stored ? JSON.parse(stored) : [];
                                     localAds.unshift(newAd);
-                                    localStorage.setItem('adexpress360_ads_local', JSON.stringify(localAds));
+                                    localStorage.setItem('findads_ads_local', JSON.stringify(localAds));
                                 } catch (err) {
                                     console.log('Local save error:', err);
                                 }
@@ -1405,9 +1405,9 @@ export function AdminDashboard() {
 
                                             // Save to localStorage first
                                             try {
-                                                const stored = localStorage.getItem('adexpress360_ads_local');
+                                                const stored = localStorage.getItem('findads_ads_local');
                                                 const localAds = stored ? JSON.parse(stored) : [];
-                                                localStorage.setItem('adexpress360_ads_local', JSON.stringify([...newAds, ...localAds]));
+                                                localStorage.setItem('findads_ads_local', JSON.stringify([...newAds, ...localAds]));
                                             } catch (e) {
                                                 console.log('Local save error:', e);
                                             }

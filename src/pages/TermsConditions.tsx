@@ -30,7 +30,7 @@ export function TermsConditions() {
                             <div>
                                 <h3 className="font-semibold text-amber-800 dark:text-amber-300 mb-2">Important Legal Notice</h3>
                                 <p className="text-amber-700 dark:text-amber-400 text-sm">
-                                    By accessing or using AdExpress360, you agree to be bound by these Terms & Conditions.
+                                    By accessing or using FindAds, you agree to be bound by these Terms & Conditions.
                                     If you do not agree, please do not use our services. These terms constitute a legally
                                     binding agreement under the Indian Contract Act, 1872.
                                 </p>
@@ -50,13 +50,13 @@ export function TermsConditions() {
                             <div className="text-gray-700 dark:text-gray-300 space-y-4">
                                 <p>In these Terms & Conditions:</p>
                                 <ul className="space-y-2">
-                                    <li><strong>"Platform"</strong> refers to AdExpress360 website and mobile applications</li>
+                                    <li><strong>"Platform"</strong> refers to FindAds website and mobile applications</li>
                                     <li><strong>"User"</strong> refers to any person accessing or using the Platform</li>
                                     <li><strong>"Advertiser"</strong> refers to Users who post advertisements</li>
                                     <li><strong>"Advertisement/Ad"</strong> refers to any listing posted on the Platform</li>
                                     <li><strong>"Services"</strong> refers to all features and functionalities provided by the Platform</li>
                                     <li><strong>"Content"</strong> refers to text, images, and any material posted by Users</li>
-                                    <li><strong>"We/Us/Our"</strong> refers to AdExpress360 and its operators</li>
+                                    <li><strong>"We/Us/Our"</strong> refers to FindAds and its operators</li>
                                 </ul>
                             </div>
                         </section>
@@ -246,7 +246,7 @@ export function TermsConditions() {
                             <div className="text-gray-700 dark:text-gray-300 space-y-4">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">7.1 Our Rights</h3>
                                 <p>
-                                    AdExpress360, its logo, design, features, and functionality are owned by us and protected
+                                    FindAds, its logo, design, features, and functionality are owned by us and protected
                                     under the Copyright Act, 1957 and Trademarks Act, 1999. You may not copy, reproduce, or
                                     create derivative works without written permission.
                                 </p>
@@ -277,7 +277,7 @@ export function TermsConditions() {
                                 <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 space-y-4">
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">8.1 Platform Role</h3>
                                     <p>
-                                        AdExpress360 is an <strong>intermediary platform</strong> as defined under Section 2(1)(w) of the
+                                        FindAds is an <strong>intermediary platform</strong> as defined under Section 2(1)(w) of the
                                         Information Technology Act, 2000. We merely provide the technological platform for Users to
                                         post and view advertisements. We do NOT:
                                     </p>
@@ -322,7 +322,7 @@ export function TermsConditions() {
                             </h2>
                             <div className="text-gray-700 dark:text-gray-300 space-y-4">
                                 <p>
-                                    You agree to indemnify, defend, and hold harmless AdExpress360, its officers, directors,
+                                    You agree to indemnify, defend, and hold harmless FindAds, its officers, directors,
                                     employees, and agents from any claims, damages, losses, liabilities, costs, or expenses
                                     (including legal fees) arising from:
                                 </p>
@@ -445,10 +445,10 @@ export function TermsConditions() {
                             </h2>
                             <div className="text-gray-700 dark:text-gray-300 space-y-4">
                                 <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
-                                    <p><strong>Business Name:</strong> AdExpress360</p>
-                                    <p><strong>Grievance Officer:</strong> [Officer Name]</p>
-                                    <p><strong>Email:</strong> legal@adexpress360.com</p>
-                                    <p><strong>Grievance Email:</strong> grievance@adexpress360.com</p>
+                                    <p><strong>Business Name:</strong> FindAds</p>
+                                    <p><strong>Address:</strong> Mumbai, Maharashtra, India</p>
+                                    <p><strong>Email:</strong> legal@findads.com</p>
+                                    <p><strong>Grievance Email:</strong> grievance@findads.com</p>
                                     <p><strong>Address:</strong> [Your Registered Address], India</p>
                                     <p className="mt-4 text-sm">
                                         Complaints will be acknowledged within 24 hours and resolved within 30 days as per
@@ -476,7 +476,7 @@ export function TermsConditions() {
                                 Acknowledgment
                             </h3>
                             <p className="text-primary-700 dark:text-primary-400 text-sm">
-                                By using AdExpress360, you acknowledge that you have read, understood, and agree to be bound
+                                By using FindAds, you acknowledge that you have read, understood, and agree to be bound
                                 by these Terms & Conditions. If you are accepting on behalf of an organization, you represent
                                 that you have authority to bind that organization to these Terms.
                             </p>

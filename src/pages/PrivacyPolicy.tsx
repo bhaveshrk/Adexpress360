@@ -33,7 +33,7 @@ export function PrivacyPolicy() {
                             </h2>
                             <div className="text-gray-700 dark:text-gray-300 space-y-4">
                                 <p>
-                                    Welcome to AdExpress360 ("we," "our," or "us"). We are committed to protecting your privacy
+                                    Welcome to FindAds ("we," "our," or "us"). We are committed to protecting your privacy
                                     and personal data in accordance with the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong>,
                                     the <strong>Information Technology Act, 2000</strong>, and the <strong>Information Technology
                                         (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011</strong>.
@@ -45,7 +45,7 @@ export function PrivacyPolicy() {
                                 </p>
                                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                                     <p className="text-blue-800 dark:text-blue-300 text-sm">
-                                        <strong>Data Fiduciary:</strong> AdExpress360 operates as a Data Fiduciary under the DPDP Act, 2023.
+                                        <strong>Data Fiduciary:</strong> FindAds operates as a Data Fiduciary under the DPDP Act, 2023.
                                         We process your personal data based on your consent and legitimate purposes as outlined in this policy.
                                     </p>
                                 </div>
@@ -320,8 +320,8 @@ export function PrivacyPolicy() {
                                     In accordance with IT Act, 2000 and DPDP Act, 2023, we have appointed a Grievance Officer:
                                 </p>
                                 <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
-                                    <p><strong>Name:</strong> Grievance Officer, AdExpress360</p>
-                                    <p><strong>Email:</strong> grievance@adexpress360.com</p>
+                                    <p><strong>Name:</strong> Grievance Officer, FindAds</p>
+                                    <p><strong>Email:</strong> grievance@findads.com</p>
                                     <p><strong>Response Time:</strong> Within 30 days of receiving complaint</p>
                                     <p className="mt-4 text-sm">
                                         If not satisfied with our response, you may approach the Data Protection Board of India

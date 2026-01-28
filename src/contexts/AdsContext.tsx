@@ -28,7 +28,7 @@ interface AdsContextType {
 }
 
 const AdsContext = createContext<AdsContextType | undefined>(undefined);
-const LOCAL_ADS_KEY = 'adexpress360_ads_local';
+const LOCAL_ADS_KEY = 'findads_ads_local';
 
 // Get ads from localStorage
 function getLocalAds(): Ad[] {

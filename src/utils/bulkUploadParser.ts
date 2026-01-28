@@ -577,7 +577,7 @@ export interface UploadHistoryItem {
     fileName: string;
 }
 
-const UPLOAD_HISTORY_KEY = 'adexpress360_bulk_upload_history';
+const UPLOAD_HISTORY_KEY = 'findads_bulk_upload_history';
 
 // Save upload to history
 export function saveUploadToHistory(fileName: string, count: number): void {

@@ -14,7 +14,7 @@ interface AdCardProps {
 }
 
 // Saved ads stored in localStorage
-const SAVED_ADS_KEY = 'adexpress360_saved_ads';
+const SAVED_ADS_KEY = 'findads_saved_ads';
 
 const getSavedAds = (): string[] => {
     try {
@@ -62,7 +62,7 @@ export function AdCard({ ad, showActions = false, onEdit, onDelete }: AdCardProp
 
     const handleWhatsApp = () => {
         incrementCalls(ad.id);
-        const message = encodeURIComponent(`Hi, I'm interested in your ad: "${displayTitle}" on adexpress360.`);
+        const message = encodeURIComponent(`Hi, I'm interested in your ad: "${displayTitle}" on FindAds.`);
         window.open(`https://wa.me/91${ad.phone_number}?text=${message}`, '_blank');
     };
 
