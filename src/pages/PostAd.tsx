@@ -344,12 +344,12 @@ export function PostAd() {
                                                 type="button"
                                                 onClick={() => updateFormData({ duration_days: opt.days })}
                                                 className={`p-4 rounded-xl border-2 text-left transition-all ${formData.duration_days === opt.days
-                                                    ? 'border-primary-500 bg-primary-50'
-                                                    : 'border-gray-200 hover:border-gray-300'
+                                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                                                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-700'
                                                     }`}
                                             >
                                                 <span className="font-medium text-gray-900 dark:text-white">{opt.label}</span>
-                                                <span className={`block text-sm mt-0.5 ${opt.price === 'Free' ? 'text-success-600 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
+                                                <span className={`block text-sm mt-0.5 ${opt.price === 'Free' ? 'text-success-600 dark:text-green-400 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                                                     {opt.price}
                                                 </span>
                                             </button>
